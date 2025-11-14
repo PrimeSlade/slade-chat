@@ -1,10 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { User } from 'src/users/entities/user.entity';
 import { comparePassword, hashPassword } from 'src/common/helpers/hahs.helper';
 import { PrismaService } from 'src/prisma.service';
-import { SignInDto } from './dto/sigin-auth.dto';
 import { JwtService } from '@nestjs/jwt';
+import { RegisterDto, SignInDto } from './dto/auth.dto';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -13,12 +12,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(createUserDto: CreateUserDto): Promise<User> {
-    const hashedPassword = await hashPassword(createUserDto.password);
+  async register(registerDto: RegisterDto): Promise<User> {
+    const hashedPassword = await hashPassword(registerDto.password);
 
     const user = await this.prisma.user.create({
       data: {
-        ...createUserDto,
+        ...registerDto,
         password: hashedPassword,
       },
     });
