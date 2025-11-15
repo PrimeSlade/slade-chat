@@ -14,10 +14,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id    Int     @default(autoincrement()) @id
   email String  @unique
   name  String
   password String
+  categories Category[] @default([WORLD])
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  @@map("users")
+}
+
+model New {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  publishedAt DateTime @map("published_at")
+  fetchedAt   DateTime @map("fetched_at")
+
+  @@index([publishedAt])
+
+  @@map("news")
+}
+
+enum Category {
+  BUSINESS
+  CRIME
+  DOMESTIC
+  EDUCATION
+  ENTERTAINMENT
+  ENVIRONMENT
+  FOOD
+  HEALTH
+  LIFESTYLE
+  OTHER
+  POLITICS
+  SCIENCE
+  SPORT
+  TECHNOLOGY
+  TOURISM
+  WORLD
 }
