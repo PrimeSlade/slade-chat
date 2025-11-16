@@ -15,28 +15,38 @@ datasource db {
 }
 
 model User {
-  id    Int     @default(autoincrement()) @id
-  email String  @unique
-  name  String
-  password String
-  categories Category[] @default([WORLD])
+  id         Int        @id @default(autoincrement())
+  email      String     @unique
+  name       String
+  password   String
+  categories Category[]
 
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  deletedAt  DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   @@map("users")
 }
 
 model New {
-  id          Int      @id @default(autoincrement())
-  title       String
-  content     String
+  id Int @id @default(autoincrement())
+
   publishedAt DateTime @map("published_at")
   fetchedAt   DateTime @map("fetched_at")
 
-  @@index([publishedAt])
+  articleId   String     @unique @map("article_id")
+  title       String
+  link        String
+  content     String?
+  sourceUrl   String     @map("source_url")
+  creator     String[]
+  imageUrl    String?    @map("image_url")
+  description String
+  category    Category[]
+  pubDate     DateTime   @map("pub_date")
+  pubDateTZ   String     @map("pub_date_tz")
 
+  @@index([publishedAt])
   @@map("news")
 }
 
@@ -56,5 +66,6 @@ enum Category {
   SPORT
   TECHNOLOGY
   TOURISM
+  TOP
   WORLD
 }

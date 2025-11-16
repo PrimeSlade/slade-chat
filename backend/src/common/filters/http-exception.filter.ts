@@ -29,6 +29,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       exception instanceof Prisma.PrismaClientKnownRequestError ||
       exception instanceof Prisma.PrismaClientValidationError
     ) {
+      console.log(exception);
       const error = mapPrismaError(exception);
       status = error.status;
       message = error.message;
