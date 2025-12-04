@@ -15,57 +15,64 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  email      String     @unique
-  name       String
-  password   String
-  categories Category[]
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
 
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-
-  @@map("users")
+  @@unique([email])
+  @@map("user")
 }
 
-model New {
-  id Int @id @default(autoincrement())
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  publishedAt DateTime @map("published_at")
-  fetchedAt   DateTime @map("fetched_at")
-
-  articleId   String     @unique @map("article_id")
-  title       String
-  link        String
-  content     String?
-  sourceUrl   String     @map("source_url")
-  creator     String[]
-  imageUrl    String?    @map("image_url")
-  description String?
-  category    Category[]
-  pubDate     DateTime   @map("pub_date")
-  pubDateTZ   String     @map("pub_date_tz")
-
-  @@index([publishedAt])
-  @@map("news")
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
 }
 
-enum Category {
-  BUSINESS
-  CRIME
-  DOMESTIC
-  EDUCATION
-  ENTERTAINMENT
-  ENVIRONMENT
-  FOOD
-  HEALTH
-  LIFESTYLE
-  OTHER
-  POLITICS
-  SCIENCE
-  SPORTS
-  TECHNOLOGY
-  TOURISM
-  TOP
-  WORLD
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }

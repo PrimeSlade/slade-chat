@@ -6,7 +6,9 @@ import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
+  });
   app.use(cookieParser());
 
   const configService = app.get(ConfigService);
