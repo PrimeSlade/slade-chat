@@ -1,4 +1,13 @@
-import { Controller, Post, Body, UsePipes, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UsePipes,
+  Res,
+  UseGuards,
+  Get,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
 import { createUserSchema } from 'src/users/dto/user.dto';
@@ -8,7 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { RegisterDto, SignInDto, signInSchema } from './dto/auth.dto';
 import { User } from 'src/users/entities/user.entity';
 import { ResponseType } from 'src/common/types/responce.type';
-
+import { GoogleOAuthGard } from './google-oauth.guard';
 @Public()
 @Controller('auth')
 export class AuthController {
@@ -45,5 +54,18 @@ export class AuthController {
     });
 
     return { message: 'Successfully logged in' };
+  }
+
+  @Get('google')
+  @UseGuards(GoogleOAuthGard)
+  async googleOAuth() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGard)
+  googleAuthRedirect(@Req() req) {
+    return {
+      message: 'User information from Google',
+      data: req.user,
+    };
   }
 }
