@@ -11,6 +11,13 @@ export default function LoginPage() {
   const [name, setName] = useState(""); // Only for sign up
   const router = useRouter();
 
+  const handleGoogleLogin = async () => {
+    await signIn.social({
+      provider: "google",
+      callbackURL: "http://localhost:3000/dashboard",
+    });
+  };
+
   const handleSubmit = async () => {
     if (isSignUp) {
       await signUp.email(
@@ -73,6 +80,7 @@ export default function LoginPage() {
           >
             {isSignUp ? "Sign Up" : "Sign In"}
           </button>
+          <button onClick={handleGoogleLogin}>Sign in with Google</button>
         </div>
 
         <p className="mt-4 text-center text-sm">
