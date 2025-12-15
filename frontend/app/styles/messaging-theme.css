@@ -1,0 +1,118 @@
+/* messaging-theme.css */
+/* Minimal utility classes using shadcn built-in colors */
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.message-bubble-sent {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.message-bubble-received {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+.notification-badge {
+  background-color: var(--foreground);
+  color: var(--background);
+}
+
+.search-input {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+.search-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.list-item {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.list-item:hover {
+  background-color: var(--muted);
+}
+
+.list-item-subtitle {
+  color: var(--muted-foreground);
+}
+
+.audio-waveform {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.bottom-nav {
+  background-color: var(--card);
+  border-top: 1px solid var(--border);
+}
+
+.fab-button {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.fab-button:hover {
+  background-color: var(--primary);
+  opacity: 0.9;
+}
+
+/* ============================================
+     USAGE EXAMPLES
+     ============================================ */
+
+/*
+  // You can mostly just use Tailwind classes directly:
+  
+  // Background
+  <div className="bg-background">
+  
+  // Message bubbles
+  <div className="bg-primary text-primary-foreground rounded-3xl p-4">
+    Sent message
+  </div>
+  
+  <div className="bg-muted text-foreground rounded-3xl p-4">
+    Received message
+  </div>
+  
+  // Badge
+  <span className="bg-foreground text-background rounded-full w-6 h-6">
+    4
+  </span>
+  
+  // Search input
+  <input 
+    className="bg-muted text-foreground placeholder:text-muted-foreground rounded-full px-4 py-2"
+    placeholder="Search chats"
+  />
+  
+  // List item
+  <div className="bg-background hover:bg-muted p-4 rounded-lg cursor-pointer">
+    <h3 className="text-foreground font-semibold">Robert Fox</h3>
+    <p className="text-muted-foreground text-sm">Thnx!</p>
+  </div>
+  
+  // Card/Container
+  <div className="bg-card text-card-foreground rounded-lg shadow">
+    Content
+  </div>
+  
+  // Bottom Navigation
+  <nav className="bg-card border-t border-border">
+    Navigation items
+  </nav>
+  
+  // FAB
+  <button className="bg-primary text-primary-foreground rounded-full w-14 h-14 shadow-lg hover:opacity-90">
+    +
+  </button>
+  
+  RECOMMENDED: Just use Tailwind classes directly instead of custom utility classes!
+  They work perfectly with your existing theme and handle dark mode automatically.
+  */

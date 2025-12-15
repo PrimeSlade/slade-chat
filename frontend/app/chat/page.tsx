@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import "../styles/messaging-theme.css";
 
 const socket: Socket = io("http://localhost:3001/chat");
 
@@ -29,7 +30,7 @@ const Page = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="bg-gradient-messaging min-h-screen p-4">
       <h2>Simple Chat</h2>
 
       {/* Message List */}
