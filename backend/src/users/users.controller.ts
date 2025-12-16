@@ -7,32 +7,39 @@ import {
   Post,
   UsePipes,
 } from '@nestjs/common';
-import { ResponseType } from 'src/common/types/responce.type';
 import { Session, UserSession } from '@thallesp/nestjs-better-auth';
 import { UsersService } from './users.service';
 import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
-import { updateUsernameSchema, UpdateUsernameDto } from './dto/user.dto';
-import { User } from 'generated/prisma/client';
+import {
+  updateUsernameSchema,
+  UpdateUsernameDto,
+  ResponseType,
+  Friendship,
+} from '../shared';
+import { User } from 'better-auth';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  getProfile(@Session() session: UserSession) {
+  getProfile(@Session() session: UserSession): ResponseType<User> {
     return { data: session.user, message: 'User fetched successfully' };
   }
 
   @Get('friends')
-  async getFriends(@Session() session: UserSession) {
-    console.log(session.user.id);
+  async getFriends(
+    @Session() session: UserSession,
+  ): Promise<ResponseType<Friendship[]>> {
     const friends = await this.usersService.findFriends(session.user.id);
 
     return { data: friends, message: 'Friends fetched successfully' };
   }
 
   @Get('strangers')
-  async getStrangers(@Session() session: UserSession) {
+  async getStrangers(
+    @Session() session: UserSession,
+  ): Promise<ResponseType<Friendship[]>> {
     const strangers = await this.usersService.findPendingStrangers(
       session.user.id,
     );
@@ -49,7 +56,6 @@ export class UsersController {
       session.user.id,
       body.username,
     );
-
     return { data: user, message: 'Username updated successfully' };
   }
 
@@ -64,13 +70,13 @@ export class UsersController {
   async addFriend(
     @Body() body: { username: string },
     @Session() session: UserSession,
-  ) {
+  ): Promise<ResponseType<Friendship>> {
     const user = await this.usersService.findUserByUserName(
       body.username,
       session.user.id,
     );
 
-    const addedUser = this.usersService.addUser(user.id, session.user.id);
+    const addedUser = await this.usersService.addUser(user.id, session.user.id);
 
     return { data: addedUser, message: 'User added successfully' };
   }
@@ -79,7 +85,7 @@ export class UsersController {
   async acceptFriend(
     @Body() body: { id: string },
     @Session() session: UserSession,
-  ) {
+  ): Promise<ResponseType<Friendship>> {
     const user = await this.usersService.acceptUser(session.user.id, body.id);
 
     return { data: user, message: 'User accepted successfully' };

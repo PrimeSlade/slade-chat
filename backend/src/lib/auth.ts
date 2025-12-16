@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { betterAuth } from 'better-auth';
+import { betterAuth, config } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '../../generated/prisma/client';
 
@@ -10,6 +10,19 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
+  user: {
+    additionalFields: {
+      bio: {
+        type: 'string',
+        required: false,
+      },
+      username: {
+        type: 'string',
+        required: false,
+        unique: true,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
   },

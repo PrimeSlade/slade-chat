@@ -17,6 +17,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  app.setGlobalPrefix('api');
+
   await app.listen(port);
 }
 bootstrap();
