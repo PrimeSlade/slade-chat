@@ -7,46 +7,40 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
+import { User } from "@backend/shared";
 
 export type Status = "online" | "away" | "idle";
 
-type User = {
-  id: string;
-  name: string;
-  username: string | null;
-  image: string | null;
-  status?: Status;
-};
-
-type FriendBoxProps = {
+interface FriendBoxProps {
   user: User;
   variant: "friend" | "stranger";
-};
+}
 
 export function FriendBox({ user, variant }: FriendBoxProps) {
-  const statusClasses = {
-    online: "bg-green-500",
-    away: "bg-yellow-500",
-    idle: "bg-gray-500",
-  };
+  // const statusClasses = {
+  //   online: "bg-green-500",
+  //   away: "bg-yellow-500",
+  //   idle: "bg-gray-500",
+  // };
 
   return (
     <div className="p-4 rounded-lg cursor-pointer transition-colors flex items-center space-x-4 border">
       <div className="relative">
         <Image
-          src={user.image || "/vercel.svg"}
+          src={user.image || "https://github.com/shadcn.png"}
           alt={user.name}
           width={48}
           height={48}
           className="rounded-full"
         />
-        {user.status && (
+        {/* Status */}
+        {/* {user.status && (
           <div
             className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
               statusClasses[user.status]
             }`}
           ></div>
-        )}
+        )} */}
       </div>
       <div className="flex-1">
         <h3 className="font-semibold">{user.name}</h3>

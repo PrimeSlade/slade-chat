@@ -1,33 +1,29 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import NavBar from "@/components/navbar/nav-bar";
+import { getFriends, getStrangers } from "@/lib/api/friends";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
 import React, { ReactNode } from "react";
 
-export default function Layout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+export default async function Layout({ children }: { children: ReactNode }) {
+  const queryClient = new QueryClient();
 
-  const getLinkClass = (path: string) => {
-    return pathname === path
-      ? "text-primary"
-      : "text-muted-foreground hover:text-primary";
-  };
+  await Promise.all([
+    queryClient.prefetchQuery({ queryKey: ["friends"], queryFn: getFriends }),
+    queryClient.prefetchQuery({
+      queryKey: ["strangers"],
+      queryFn: getStrangers,
+    }),
+  ]);
 
   return (
-    <>
+    <HydrationBoundary state={dehydrate(queryClient)}>
       <div className="p-4 space-y-4">
-        <header>
-          <nav className="text-xl font-bold flex gap-10">
-            <Link href={"/friends"} className={getLinkClass("/friends")}>
-              Friends
-            </Link>
-            <Link href={"/strangers"} className={getLinkClass("/strangers")}>
-              Strangers
-            </Link>
-          </nav>
-        </header>
+        <NavBar />
         <div>{children}</div>
       </div>
-    </>
+    </HydrationBoundary>
   );
 }

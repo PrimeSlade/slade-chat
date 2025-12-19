@@ -2,12 +2,15 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import "../styles/messaging-theme.css";
+import { User } from "@backend/shared";
 
 const socket: Socket = io("http://localhost:3001/chat");
 
 const Page = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
+
+  const [test, setTest] = useState<User>();
 
   useEffect(() => {
     // 1. Listen for incoming messages
