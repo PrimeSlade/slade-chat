@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
+    cors: true,
   });
   app.use(cookieParser());
 
@@ -18,6 +19,12 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.setGlobalPrefix('api');
+
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   await app.listen(port);
 }
