@@ -1,15 +1,4 @@
-import {
-  Controller,
-  Get,
-  Body,
-  Patch,
-  Req,
-  Post,
-  UsePipes,
-  HttpException,
-  HttpStatus,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Body, Patch, Req, Post } from '@nestjs/common';
 import { Session, UserSession } from '@thallesp/nestjs-better-auth';
 import { UsersService } from './users.service';
 import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
@@ -21,7 +10,6 @@ import {
   FriendshipWithUsers,
 } from '../shared';
 import { User } from 'better-auth';
-import { NotFoundError, throwError } from 'rxjs';
 
 @Controller('users')
 export class UsersController {
@@ -77,12 +65,11 @@ export class UsersController {
     @Body() body: { username: string },
     @Session() session: UserSession,
   ): Promise<ResponseType<Friendship>> {
-    const user = await this.usersService.findUserByUserName(
+    const addedUser = await this.usersService.addUser(
+      session.user.id,
       body.username,
       session.user.id,
     );
-
-    const addedUser = await this.usersService.addUser(user.id, session.user.id);
 
     return { data: addedUser, message: 'User added successfully' };
   }

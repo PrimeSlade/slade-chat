@@ -1,6 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { Friendship, FriendshipWithUsers, User } from '../shared';
+import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  Friendship,
+  FriendshipWithReceivers,
+  FriendshipWithUsers,
+  User,
+} from '../shared';
 import { PrismaService } from 'src/prisma.service';
+import { FriendStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class UsersRepository {
@@ -84,6 +90,27 @@ export class UsersRepository {
       },
       data: {
         status: 'BLOCKED',
+      },
+    });
+  }
+
+  async findStatus(myId: string, username: string): Promise<Friendship | null> {
+    return this.prismaService.friendship.findFirst({
+      where: {
+        OR: [
+          {
+            senderId: myId,
+            receiver: { username },
+          },
+          {
+            receiverId: myId,
+            sender: { username },
+          },
+        ],
+      },
+      include: {
+        sender: true,
+        receiver: true,
       },
     });
   }
