@@ -1,4 +1,4 @@
-// src/common/helpers/prisma‑error.helper.ts
+// src/common/helpers/prisma-error.helper.ts
 import { HttpStatus } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
 
@@ -21,41 +21,39 @@ export function mapPrismaError(
         return {
           status: HttpStatus.BAD_REQUEST,
           message:
-            options?.P2000 ||
-            `Value too long for field: ${error.meta?.target || 'unknown field'}`,
+            options?.P2000 || `Value too long for field: ${error.meta?.targe}`,
         };
       case 'P2002':
         return {
           status: HttpStatus.CONFLICT,
-          message:
-            options?.P2002 ||
-            `This ${error.meta?.target || 'field'} already exists.`,
+          message: options?.P2002 || `${error.meta?.target} already exists`,
         };
       case 'P2003':
         return {
           status: HttpStatus.BAD_REQUEST,
           message:
             options?.P2003 ||
-            `Invalid reference on field: ${error.meta?.field_name || 'unknown field'}`,
+            `Invalid reference on field: ${error.meta?.field_name}`,
         };
       case 'P2025':
         return {
           status: HttpStatus.NOT_FOUND,
-          message: options?.P2025 || 'The requested record was not found.',
+          message:
+            options?.P2025 || `${error.meta?.modelName || 'Record'} not found`,
         };
       case 'P2001':
         return {
           status: HttpStatus.NOT_FOUND,
           message:
             options?.P2001 ||
-            'The record you are trying to delete does not exist.',
+            `${error.meta?.modelName || 'Record'} does not exist`,
         };
       case 'P2014':
         return {
           status: HttpStatus.BAD_REQUEST,
           message:
             options?.P2014 ||
-            'Cannot delete this record because other records depend on it.',
+            `Cannot delete ${error.meta?.modelName || 'record'} because other records depend on it`,
         };
       default:
         return {
@@ -64,14 +62,12 @@ export function mapPrismaError(
         };
     }
   }
-
   if (error instanceof Prisma.PrismaClientValidationError) {
     return {
       status: HttpStatus.BAD_REQUEST,
       message: 'Invalid data provided to database operation',
     };
   }
-
   return {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     message: 'Internal server error',
