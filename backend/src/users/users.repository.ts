@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import {
   Friendship,
-  FriendshipWithReceivers,
+  FriendshipWithSenders,
   FriendshipWithUsers,
   User,
 } from '../shared';
@@ -12,11 +12,10 @@ import { FriendStatus } from 'generated/prisma/enums';
 export class UsersRepository {
   constructor(private prismaService: PrismaService) {}
 
-  async findUserByUserName(username: string, myId: string): Promise<User> {
+  async findUserByUserName(username: string): Promise<User> {
     return this.prismaService.user.findFirstOrThrow({
       where: {
         username,
-        id: { not: myId },
       },
     });
   }
@@ -45,7 +44,7 @@ export class UsersRepository {
     });
   }
 
-  async findPendingStrangers(myId: string): Promise<Friendship[]> {
+  async findPendingStrangers(myId: string): Promise<FriendshipWithSenders[]> {
     return this.prismaService.friendship.findMany({
       where: {
         receiverId: myId,

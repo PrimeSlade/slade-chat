@@ -9,3 +9,9 @@ export type FriendshipWithUsers = Prisma.FriendshipGetPayload<{
     receiver: true;
   };
 }>;
+
+export type FriendshipWithSenders = Prisma.FriendshipGetPayload<{
+  include: {
+    sender: true;
+  };
+}>;

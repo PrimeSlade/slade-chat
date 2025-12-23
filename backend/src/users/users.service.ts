@@ -1,10 +1,16 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Friendship, FriendshipWithUsers, User } from '../shared';
+import {
+  Friendship,
+  FriendshipWithSenders,
+  FriendshipWithUsers,
+  User,
+} from '../shared';
 import { UsersRepository } from './users.repository';
 
 @Injectable()
@@ -13,7 +19,7 @@ export class UsersService {
 
   //Find by username
   async findUserByUserName(username: string, myId: string): Promise<User> {
-    return this.usersRepository.findUserByUserName(username, myId);
+    return this.usersRepository.findUserByUserName(username);
   }
 
   //Update name
@@ -27,7 +33,7 @@ export class UsersService {
   }
 
   //Pending
-  async findPendingStrangers(myId: string): Promise<Friendship[]> {
+  async findPendingStrangers(myId: string): Promise<FriendshipWithSenders[]> {
     return this.usersRepository.findPendingStrangers(myId);
   }
 
@@ -37,10 +43,11 @@ export class UsersService {
     username: string,
     myId: string,
   ): Promise<Friendship> {
-    const receiver = await this.usersRepository.findUserByUserName(
-      username,
-      myId,
-    );
+    const receiver = await this.usersRepository.findUserByUserName(username);
+
+    if (receiver.id === myId) {
+      throw new BadRequestException('You cannot add yourself');
+    }
 
     const friendship = await this.usersRepository.findStatus(myId, username);
 
