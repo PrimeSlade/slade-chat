@@ -46,10 +46,11 @@ model Friendship {
 
   status FriendStatus @default(PENDING) // PENDING, ACCEPTED, BLOCKED
 
+  blockedBy String?
+
   createdAt DateTime @default(now())
 
   // user cannot add accpeted or requested again
-
   @@unique([senderId, receiverId])
   @@map("friend_ships")
 }

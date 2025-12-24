@@ -12,6 +12,7 @@ import {
   User,
 } from '../shared';
 import { UsersRepository } from './users.repository';
+import { FriendStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class UsersService {
@@ -38,25 +39,21 @@ export class UsersService {
   }
 
   //Add user via ids
-  async addUser(
-    senderId: string,
-    username: string,
-    myId: string,
-  ): Promise<Friendship> {
+  async addUser(username: string, myId: string): Promise<Friendship> {
     const receiver = await this.usersRepository.findUserByUserName(username);
 
     if (receiver.id === myId) {
       throw new BadRequestException('You cannot add yourself');
     }
 
-    const friendship = await this.usersRepository.findStatus(myId, username);
+    const friendship = await this.usersRepository.findStatus(myId, receiver.id);
 
     if (friendship) {
-      if (friendship.status === 'ACCEPTED') {
+      if (friendship.status === FriendStatus.ACCEPTED) {
         throw new ConflictException('User is already your friend');
       }
 
-      if (friendship.status === 'PENDING') {
+      if (friendship.status === FriendStatus.PENDING) {
         if (friendship.senderId === myId) {
           throw new ConflictException(
             'You have already sent a friend request to this user.',
@@ -68,12 +65,12 @@ export class UsersService {
         }
       }
 
-      if (friendship.status === 'BLOCKED') {
+      if (friendship.status === FriendStatus.BLOCKED) {
         throw new ForbiddenException('Unable to add user.');
       }
     }
 
-    return this.usersRepository.addUser(receiver.id, senderId);
+    return this.usersRepository.addUser(receiver.id, myId);
   }
 
   //Accept
@@ -87,12 +84,26 @@ export class UsersService {
   }
 
   //Unfriend
-  // async unfriendUser(myId: string): Promise<Friendship> {
-  //   const friend = await this.usersRepository.findFriends(myId);
-  // }
+  async unfriendUser(myId: string, otherUserId: string) {
+    const friendShip = await this.usersRepository.findStatus(myId, otherUserId);
+
+    if (!friendShip || friendShip.status !== FriendStatus.ACCEPTED) {
+      throw new ConflictException('You are not friends');
+    }
+
+    return this.usersRepository.unfriendUser(friendShip.id);
+  }
 
   //Block
-  async blockUser(myId: string, senderId: string): Promise<Friendship> {
-    return this.usersRepository.blockUser(myId, senderId);
+  async blockUser(myId: string, otherUserId: string): Promise<Friendship> {
+    const friendShip = await this.usersRepository.findStatus(myId, otherUserId);
+
+    if (friendShip) {
+      // Friendship exists → pass the id to the repo function
+      return this.usersRepository.blockUser(myId, otherUserId, friendShip.id);
+    }
+
+    // No friendship → pass null or let repo handle creation
+    return this.usersRepository.blockUser(myId, otherUserId, null);
   }
 }

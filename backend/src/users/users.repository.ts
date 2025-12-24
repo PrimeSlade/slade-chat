@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   Friendship,
   FriendshipWithSenders,
@@ -34,7 +34,7 @@ export class UsersRepository {
   async findFriends(myId: string): Promise<FriendshipWithUsers[]> {
     return this.prismaService.friendship.findMany({
       where: {
-        status: 'ACCEPTED',
+        status: FriendStatus.ACCEPTED,
         OR: [{ senderId: myId }, { receiverId: myId }], //both sides
       },
       include: {
@@ -48,7 +48,7 @@ export class UsersRepository {
     return this.prismaService.friendship.findMany({
       where: {
         receiverId: myId,
-        status: 'PENDING',
+        status: FriendStatus.PENDING,
       },
       include: {
         sender: true,
@@ -56,10 +56,10 @@ export class UsersRepository {
     });
   }
 
-  async addUser(receiverId: string, senderId: string): Promise<Friendship> {
+  async addUser(receiverId: string, myId: string): Promise<Friendship> {
     return this.prismaService.friendship.create({
       data: {
-        senderId,
+        senderId: myId,
         receiverId,
       },
     });
@@ -74,7 +74,7 @@ export class UsersRepository {
         },
       },
       data: {
-        status: 'ACCEPTED',
+        status: FriendStatus.ACCEPTED,
       },
     });
   }
@@ -86,54 +86,62 @@ export class UsersRepository {
           senderId,
           receiverId: myId,
         },
-        status: 'PENDING',
+        status: FriendStatus.PENDING,
       },
     });
   }
 
-  // async unfriendUser(myId: string, friendId: string): Promise<FriendStatus> {
-  //   return this.prismaService.friendship.delete({
-  //     where: {
-  //       status: 'ACCEPTED',
-  //       OR: [
-  //         { senderId: myId, receiverId: friendId },
-  //         { senderId: friendId, receiverId: myId },
-  //       ],
-  //     },
-  //   });
-  // }
-
-  async blockUser(receiverId: string, senderId: string): Promise<Friendship> {
-    return this.prismaService.friendship.update({
+  async unfriendUser(friendShipId: string): Promise<Friendship> {
+    return this.prismaService.friendship.delete({
       where: {
-        senderId_receiverId: {
-          senderId,
-          receiverId,
-        },
-      },
-      data: {
-        status: 'BLOCKED',
+        id: friendShipId,
       },
     });
   }
 
-  async findStatus(myId: string, username: string): Promise<Friendship | null> {
+  async blockUser(
+    myId: string,
+    otherUserId: string,
+    friendShipId: string | null,
+  ): Promise<Friendship> {
+    if (friendShipId) {
+      return this.prismaService.friendship.update({
+        where: {
+          id: friendShipId,
+        },
+        data: {
+          status: FriendStatus.BLOCKED,
+          blockedBy: myId,
+        },
+      });
+    }
+
+    return this.prismaService.friendship.create({
+      data: {
+        senderId: myId,
+        receiverId: otherUserId,
+        status: FriendStatus.BLOCKED,
+        blockedBy: myId,
+      },
+    });
+  }
+
+  async findStatus(
+    myId: string,
+    otherUserId: string,
+  ): Promise<Friendship | null> {
     return this.prismaService.friendship.findFirst({
       where: {
         OR: [
           {
             senderId: myId,
-            receiver: { username },
+            receiverId: otherUserId,
           },
           {
             receiverId: myId,
-            sender: { username },
+            senderId: otherUserId,
           },
         ],
-      },
-      include: {
-        sender: true,
-        receiver: true,
       },
     });
   }

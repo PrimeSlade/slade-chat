@@ -7,6 +7,7 @@ import {
   Post,
   Param,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { Session, UserSession } from '@thallesp/nestjs-better-auth';
 import { UsersService } from './users.service';
@@ -75,7 +76,6 @@ export class UsersController {
     @Session() session: UserSession,
   ): Promise<ResponseType<Friendship>> {
     const addedUser = await this.usersService.addUser(
-      session.user.id,
       body.username,
       session.user.id,
     );
@@ -103,9 +103,23 @@ export class UsersController {
     return { data: user, message: 'User declined successfully' };
   }
 
-  // @Delete('friends/:userId/unfriend')
-  // async unfriend(
-  //   @Param('userId') userId:string,
-  //   @Session() Session: UserSession
-  // )
+  @Delete('friends/:userId/unfriend')
+  async unfriend(
+    @Param('userId') userId: string,
+    @Session() session: UserSession,
+  ): Promise<ResponseType<Friendship>> {
+    const user = await this.usersService.unfriendUser(session.user.id, userId);
+
+    return { data: user, message: 'User unfriended successfully' };
+  }
+
+  @Put(':userId/block')
+  async blockUser(
+    @Param('userId') userId: string,
+    @Session() session: UserSession,
+  ) {
+    const user = await this.usersService.blockUser(session.user.id, userId);
+
+    return { data: user, message: 'User blocked successfully' };
+  }
 }
