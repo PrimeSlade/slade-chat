@@ -93,7 +93,7 @@ export class UsersController {
     return { data: user, message: 'User accepted successfully' };
   }
 
-  @Delete('friends/:userId/decline')
+  @Patch('friends/:userId/decline')
   async declineFriend(
     @Param('userId') userId: string,
     @Session() session: UserSession,
@@ -103,7 +103,7 @@ export class UsersController {
     return { data: user, message: 'User declined successfully' };
   }
 
-  @Delete('friends/:userId/unfriend')
+  @Patch('friends/:userId/unfriend')
   async unfriend(
     @Param('userId') userId: string,
     @Session() session: UserSession,

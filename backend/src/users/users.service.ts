@@ -68,9 +68,11 @@ export class UsersService {
       if (friendship.status === FriendStatus.BLOCKED) {
         throw new ForbiddenException('Unable to add user.');
       }
+
+      return this.usersRepository.addUser(receiver.id, myId, friendship.id);
     }
 
-    return this.usersRepository.addUser(receiver.id, myId);
+    return this.usersRepository.addUser(receiver.id, myId, null);
   }
 
   //Accept

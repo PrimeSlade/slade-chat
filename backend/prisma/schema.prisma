@@ -49,6 +49,7 @@ model Friendship {
   blockedBy String?
 
   createdAt DateTime @default(now())
+  deletedAt  DateTime? 
 
   // user cannot add accpeted or requested again
   @@unique([senderId, receiverId])
@@ -107,4 +108,6 @@ enum FriendStatus {
   PENDING
   ACCEPTED
   BLOCKED
+  UNFRIENDED
+  DECLINED
 }

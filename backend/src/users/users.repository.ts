@@ -56,7 +56,25 @@ export class UsersRepository {
     });
   }
 
-  async addUser(receiverId: string, myId: string): Promise<Friendship> {
+  async addUser(
+    receiverId: string,
+    myId: string,
+    friendShipId: string | null,
+  ): Promise<Friendship> {
+    if (friendShipId) {
+      return this.prismaService.friendship.update({
+        where: {
+          id: friendShipId,
+        },
+        data: {
+          senderId: myId,
+          receiverId,
+          status: FriendStatus.PENDING,
+          deletedAt: null,
+        },
+      });
+    }
+
     return this.prismaService.friendship.create({
       data: {
         senderId: myId,
@@ -80,7 +98,7 @@ export class UsersRepository {
   }
 
   async declineUser(myId: string, senderId: string): Promise<Friendship> {
-    return this.prismaService.friendship.delete({
+    return this.prismaService.friendship.update({
       where: {
         senderId_receiverId: {
           senderId,
@@ -88,13 +106,21 @@ export class UsersRepository {
         },
         status: FriendStatus.PENDING,
       },
+      data: {
+        status: FriendStatus.DECLINED,
+        deletedAt: new Date(),
+      },
     });
   }
 
   async unfriendUser(friendShipId: string): Promise<Friendship> {
-    return this.prismaService.friendship.delete({
+    return this.prismaService.friendship.update({
       where: {
         id: friendShipId,
+      },
+      data: {
+        status: FriendStatus.UNFRIENDED,
+        deletedAt: new Date(),
       },
     });
   }
@@ -112,6 +138,7 @@ export class UsersRepository {
         data: {
           status: FriendStatus.BLOCKED,
           blockedBy: myId,
+          deletedAt: new Date(),
         },
       });
     }
