@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Check, MessageSquare, MoreHorizontal, X } from "lucide-react";
 import {
@@ -8,6 +10,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { User } from "@backend/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  acceptFriend,
+  blockUser,
+  declineFriend,
+  unfriend,
+} from "@/lib/api/friends";
+import { toast } from "sonner";
 
 export type Status = "online" | "away" | "idle";
 
@@ -17,13 +27,58 @@ interface FriendBoxProps {
 }
 
 export function FriendBox({ user, variant }: FriendBoxProps) {
+  const queryClient = useQueryClient();
+
+  const acceptMutation = useMutation({
+    mutationFn: acceptFriend,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["strangers"] });
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      toast.success(data?.message);
+    },
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: declineFriend,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["strangers"] });
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      toast.success(data?.message);
+    },
+  });
+
+  const unfriendMutation = useMutation({
+    mutationFn: unfriend,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      toast.success(data?.message);
+    },
+  });
+
+  const blockUserMutation = useMutation({
+    mutationFn: blockUser,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      toast.success(data?.message);
+    },
+  });
+
+  const mutations = {
+    acceptMutation,
+    declineMutation,
+    unfriendMutation,
+    blockUserMutation,
+  } as const;
+
+  const handleClick = (type: keyof typeof mutations) => {
+    mutations[type].mutate({ id: user.id });
+  };
+
   // const statusClasses = {
   //   online: "bg-green-500",
   //   away: "bg-yellow-500",
   //   idle: "bg-gray-500",
   // };
-
-  console.log(user);
 
   return (
     <div className="p-4 rounded-lg cursor-pointer transition-colors flex items-center space-x-4 border">
@@ -60,18 +115,32 @@ export function FriendBox({ user, variant }: FriendBoxProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>Unfriend</DropdownMenuItem>
-              <DropdownMenuItem>Block</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleClick("unfriendMutation")}>
+                Unfriend
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleClick("blockUserMutation")}>
+                Block
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       )}
       {variant === "stranger" && (
         <div className="flex gap-2">
-          <Button variant="outline" size="icon">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleClick("declineMutation")}
+            disabled={declineMutation.isPending || acceptMutation.isPending}
+          >
             <X className="h-4 w-4 text-destructive" />
           </Button>
-          <Button variant="outline" size="icon">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleClick("acceptMutation")}
+            disabled={declineMutation.isPending || acceptMutation.isPending}
+          >
             <Check className="h-4 w-4" />
           </Button>
         </div>

@@ -27,7 +27,7 @@ export function AddFriendDialog() {
     onSuccess: (data) => {
       setUsername("");
       setOpen(false);
-      toast.success(data.message);
+      toast.success(data!.message);
 
       // Invalidate queries to refetch friends/strangers list
       queryClient.invalidateQueries({ queryKey: ["friends"] });

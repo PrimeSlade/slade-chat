@@ -52,9 +52,11 @@ const patchUserName = async (
   }
 };
 
-const addFriend = async (inputData: { username: string }) => {
+const addFriend = async (inputData: {
+  username: string;
+}): Promise<ResponseFormat<Friendship> | undefined> => {
   try {
-    const { data } = await axiosInstance.post(
+    const { data } = await axiosInstance.post<ResponseFormat<Friendship>>(
       "/users/request-by-username",
       inputData
     );
@@ -66,4 +68,71 @@ const addFriend = async (inputData: { username: string }) => {
   }
 };
 
-export { getFriends, getStrangers, patchUserName, addFriend };
+const acceptFriend = async (inputData: {
+  id: string;
+}): Promise<ResponseFormat<Friendship> | undefined> => {
+  try {
+    const { data } = await axiosInstance.patch<ResponseFormat<Friendship>>(
+      `/users/friends/${inputData.id}/accept`
+    );
+
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+const declineFriend = async (inputData: {
+  id: string;
+}): Promise<ResponseFormat<Friendship> | undefined> => {
+  try {
+    const { data } = await axiosInstance.delete<ResponseFormat<Friendship>>(
+      `/users/friends/${inputData.id}/decline`
+    );
+
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+const unfriend = async (
+  inputData: { id: string }
+): Promise<ResponseFormat<Friendship> | undefined> => {
+  try {
+    const { data } = await axiosInstance.delete<ResponseFormat<Friendship>>(
+      `/users/friends/${inputData.id}/unfriend`
+    );
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+const blockUser = async (
+  inputData: { id: string }
+): Promise<ResponseFormat<Friendship> | undefined> => {
+  try {
+    const { data } = await axiosInstance.put<ResponseFormat<Friendship>>(
+      `/users/${inputData.id}/block`
+    );
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+export {
+  getFriends,
+  getStrangers,
+  patchUserName,
+  addFriend,
+  acceptFriend,
+  declineFriend,
+  unfriend,
+  blockUser,
+};
