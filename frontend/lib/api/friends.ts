@@ -87,7 +87,7 @@ const declineFriend = async (inputData: {
   id: string;
 }): Promise<ResponseFormat<Friendship> | undefined> => {
   try {
-    const { data } = await axiosInstance.delete<ResponseFormat<Friendship>>(
+    const { data } = await axiosInstance.patch<ResponseFormat<Friendship>>(
       `/users/friends/${inputData.id}/decline`
     );
 
@@ -98,11 +98,11 @@ const declineFriend = async (inputData: {
   }
 };
 
-const unfriend = async (
-  inputData: { id: string }
-): Promise<ResponseFormat<Friendship> | undefined> => {
+const unfriend = async (inputData: {
+  id: string;
+}): Promise<ResponseFormat<Friendship> | undefined> => {
   try {
-    const { data } = await axiosInstance.delete<ResponseFormat<Friendship>>(
+    const { data } = await axiosInstance.patch<ResponseFormat<Friendship>>(
       `/users/friends/${inputData.id}/unfriend`
     );
     return data;
@@ -112,9 +112,9 @@ const unfriend = async (
   }
 };
 
-const blockUser = async (
-  inputData: { id: string }
-): Promise<ResponseFormat<Friendship> | undefined> => {
+const blockUser = async (inputData: {
+  id: string;
+}): Promise<ResponseFormat<Friendship> | undefined> => {
   try {
     const { data } = await axiosInstance.put<ResponseFormat<Friendship>>(
       `/users/${inputData.id}/block`
