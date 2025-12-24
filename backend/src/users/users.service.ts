@@ -3,7 +3,6 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
 import {
   Friendship,
@@ -100,6 +99,14 @@ export class UsersService {
   async blockUser(myId: string, otherUserId: string): Promise<Friendship> {
     const friendShip = await this.usersRepository.findStatus(myId, otherUserId);
 
+    if (myId === otherUserId) {
+      throw new BadRequestException('You cannot block yourself');
+    }
+
+    if (friendShip?.status === FriendStatus.BLOCKED) {
+      throw new ConflictException('User has been already blocked');
+    }
+
     if (friendShip) {
       // Friendship exists → pass the id to the repo function
       return this.usersRepository.blockUser(myId, otherUserId, friendShip.id);
@@ -107,5 +114,20 @@ export class UsersService {
 
     // No friendship → pass null or let repo handle creation
     return this.usersRepository.blockUser(myId, otherUserId, null);
+  }
+
+  //Unblock
+  async unBlockUser(myId: string, otherUserId: string): Promise<Friendship> {
+    const friendShip = await this.usersRepository.findStatus(myId, otherUserId);
+
+    if (!friendShip || friendShip.status !== FriendStatus.BLOCKED) {
+      throw new ConflictException('Friendship is not blocked.');
+    } else if (friendShip.blockedBy !== myId) {
+      throw new ForbiddenException(
+        'You cannot unblock a friendship you did not block.',
+      );
+    }
+
+    return this.usersRepository.unBlockUser(friendShip.id);
   }
 }

@@ -6,7 +6,6 @@ import {
   Req,
   Post,
   Param,
-  Delete,
   Put,
 } from '@nestjs/common';
 import { Session, UserSession } from '@thallesp/nestjs-better-auth';
@@ -88,9 +87,12 @@ export class UsersController {
     @Param('userId') userId: string,
     @Session() session: UserSession,
   ): Promise<ResponseType<Friendship>> {
-    const user = await this.usersService.acceptUser(session.user.id, userId);
+    const friendShip = await this.usersService.acceptUser(
+      session.user.id,
+      userId,
+    );
 
-    return { data: user, message: 'User accepted successfully' };
+    return { data: friendShip, message: 'User accepted successfully' };
   }
 
   @Patch('friends/:userId/decline')
@@ -98,9 +100,12 @@ export class UsersController {
     @Param('userId') userId: string,
     @Session() session: UserSession,
   ): Promise<ResponseType<Friendship>> {
-    const user = await this.usersService.declineUser(session.user.id, userId);
+    const friendShip = await this.usersService.declineUser(
+      session.user.id,
+      userId,
+    );
 
-    return { data: user, message: 'User declined successfully' };
+    return { data: friendShip, message: 'User declined successfully' };
   }
 
   @Patch('friends/:userId/unfriend')
@@ -108,18 +113,37 @@ export class UsersController {
     @Param('userId') userId: string,
     @Session() session: UserSession,
   ): Promise<ResponseType<Friendship>> {
-    const user = await this.usersService.unfriendUser(session.user.id, userId);
+    const friendShip = await this.usersService.unfriendUser(
+      session.user.id,
+      userId,
+    );
 
-    return { data: user, message: 'User unfriended successfully' };
+    return { data: friendShip, message: 'User unfriended successfully' };
   }
 
   @Put(':userId/block')
   async blockUser(
     @Param('userId') userId: string,
     @Session() session: UserSession,
-  ) {
-    const user = await this.usersService.blockUser(session.user.id, userId);
+  ): Promise<ResponseType<Friendship>> {
+    const friendShip = await this.usersService.blockUser(
+      session.user.id,
+      userId,
+    );
 
-    return { data: user, message: 'User blocked successfully' };
+    return { data: friendShip, message: 'User blocked successfully' };
+  }
+
+  @Patch(':userId/unblock')
+  async unBlockUser(
+    @Param('userId') userId: string,
+    @Session() session: UserSession,
+  ): Promise<ResponseType<Friendship>> {
+    const friendShip = await this.usersService.unBlockUser(
+      session.user.id,
+      userId,
+    );
+
+    return { data: friendShip, message: 'User unblocked successfully' };
   }
 }

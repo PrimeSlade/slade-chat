@@ -153,6 +153,19 @@ export class UsersRepository {
     });
   }
 
+  async unBlockUser(friendShipId: string): Promise<Friendship> {
+    return this.prismaService.friendship.update({
+      where: {
+        id: friendShipId,
+      },
+      data: {
+        status: FriendStatus.UNFRIENDED,
+        deletedAt: new Date(),
+        blockedBy: null,
+      },
+    });
+  }
+
   async findStatus(
     myId: string,
     otherUserId: string,
