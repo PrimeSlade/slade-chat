@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { addFriend } from "@/lib/api/friends";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { error } from "console";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -56,10 +55,7 @@ export function AddFriendDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button
-          variant={"ghost"}
-          className="text-xl font-bold text-(--primary-color) hover:text-(--primary-color-hover)"
-        >
+        <Button variant={"ghost"} className="text-xl font-bold">
           Add Friend
         </Button>
       </DialogTrigger>
@@ -82,12 +78,7 @@ export function AddFriendDialog() {
           </div>
 
           <DialogFooter>
-            <Button
-              type="submit"
-              className="btn-primary"
-              variant={"outline"}
-              disabled={mutation.isPending}
-            >
+            <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? "Sending..." : "Send request"}
             </Button>
           </DialogFooter>

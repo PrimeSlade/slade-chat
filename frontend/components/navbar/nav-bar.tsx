@@ -7,9 +7,7 @@ export default function NavBar() {
   const pathname = usePathname();
 
   const getLinkClass = (path: string) => {
-    return pathname === path
-      ? "text-(--primary-color)"
-      : "text-muted-foreground hover:text-(--primary-color)";
+    return pathname === path ? "" : "text-muted-foreground hover:text-black";
   };
 
   return (

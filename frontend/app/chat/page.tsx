@@ -3,7 +3,7 @@
 import { useSession } from "@/lib/auth-client"; // Import the hook you exported
 import { useRouter } from "next/navigation";
 
-const Page = () => {
+export default function Page() {
   const { data: session, isPending, error } = useSession();
   const router = useRouter();
 
@@ -22,6 +22,4 @@ const Page = () => {
       <p className="text-muted-foreground">Select someone to start chatting</p>
     </div>
   );
-};
-
-export default Page;
+}
