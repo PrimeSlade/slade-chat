@@ -8,26 +8,14 @@ import {
 } from "@tanstack/react-query";
 import React, { ReactNode } from "react";
 
-export default async function Layout({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient();
-
-  await Promise.all([
-    queryClient.prefetchQuery({ queryKey: ["friends"], queryFn: getFriends }),
-    queryClient.prefetchQuery({
-      queryKey: ["strangers"],
-      queryFn: getStrangers,
-    }),
-  ]);
-
+export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="p-4 space-y-4 w-screen">
-        <div className="flex justify-between items-center">
-          <NavBar />
-          <AddFriendDialog />
-        </div>
-        <div>{children}</div>
+    <div className="p-4 space-y-4 w-screen">
+      <div className="flex justify-between items-center">
+        <NavBar />
+        <AddFriendDialog />
       </div>
-    </HydrationBoundary>
+      <div>{children}</div>
+    </div>
   );
 }
