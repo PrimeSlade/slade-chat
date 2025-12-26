@@ -50,6 +50,15 @@ export class UsersController {
     return { data: strangers, message: 'Strangers fetched successfully' };
   }
 
+  @Get(':userId')
+  async getUserById(
+    @Param('userId') userId: string,
+  ): Promise<ResponseType<User>> {
+    const user = await this.usersService.findUserById(userId);
+
+    return { data: user, message: 'User fetched successfully' };
+  }
+
   @Patch('me/username')
   async updateUsername(
     @Body(new ZodValidationPipe(updateUsernameSchema)) body: UpdateUsernameDto,

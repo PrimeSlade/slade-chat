@@ -29,8 +29,10 @@ model User {
   bio      String?
   username String? @unique
 
-  sentRequests     Friendship[] @relation("sender")
-  receivedRequests Friendship[] @relation("receiver")
+  sentRequests     Friendship[]      @relation("sender")
+  receivedRequests Friendship[]      @relation("receiver")
+  rooms            RoomParticipant[]
+  message          Message[]
 
   @@unique([email])
   @@map("user")
@@ -48,8 +50,8 @@ model Friendship {
 
   blockedBy String?
 
-  createdAt DateTime @default(now())
-  deletedAt  DateTime? 
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   // user cannot add accpeted or requested again
   @@unique([senderId, receiverId])
@@ -104,10 +106,57 @@ model Verification {
   @@map("verification")
 }
 
+model Room {
+  id        String   @id @default(uuid())
+  name      String? //for group name
+  type      RoomType @default(DIRECT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt // Useful for sorting "Recent Chats"
+
+  participants RoomParticipant[]
+  messages     Message[]
+
+  @@map("room")
+}
+
+model RoomParticipant {
+  userId     String
+  roomId     String
+  joinedAt   DateTime @default(now())
+  lastReadAt DateTime @default(now()) //checking unread
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roomId]) //user can only join same room once
+  @@index([userId])
+  @@map("room_participant")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@map("message")
+}
+
 enum FriendStatus {
   PENDING
   ACCEPTED
   BLOCKED
   UNFRIENDED
   DECLINED
+}
+
+enum RoomType {
+  DIRECT
+  GROUP
 }

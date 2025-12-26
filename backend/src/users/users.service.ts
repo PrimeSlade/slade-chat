@@ -15,7 +15,11 @@ import { FriendStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class UsersService {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
+
+  async findUserById(userId: string): Promise<User> {
+    return this.usersRepository.findUserById(userId);
+  }
 
   //Find by username
   async findUserByUserName(username: string, myId: string): Promise<User> {
