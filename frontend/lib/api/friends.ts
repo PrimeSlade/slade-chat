@@ -126,6 +126,28 @@ const blockUser = async (inputData: {
   }
 };
 
+const getUserById = async (
+  userId: string
+): Promise<ResponseFormat<User> | undefined> => {
+  try {
+    const { data } = await axiosInstance.get<ResponseFormat<User>>(
+      `/users/${userId}`
+    );
+    return data;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      return undefined;
+    }
+    console.error(
+      `Error fetching user ${userId}:`,
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "An unknown error occurred"
+    );
+  }
+};
+
 export {
   getFriends,
   getStrangers,
@@ -135,4 +157,5 @@ export {
   declineFriend,
   unfriend,
   blockUser,
+  getUserById,
 };
