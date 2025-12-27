@@ -147,20 +147,18 @@ const mockChatData: RoomParticipantWithRoom[] = [
 ];
 
 export function ChatList() {
-  const { userId } = useParams();
+  const { userId, roomId } = useParams();
 
   const router = useRouter();
 
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(
-    userId as string
-  );
+  const activeRoomId = roomId;
 
   const { data: roomsData, isLoading: isRoomsLoading } = useRooms();
 
   const { data: userData } = useUserById(userId as string);
 
   const handleItemClick = (roomId: string) => {
-    setActiveRoomId(roomId);
+    router.push(`/chat/${roomId}`);
     console.log(`Entering room: ${roomId}`);
   };
 

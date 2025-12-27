@@ -3,6 +3,7 @@ import {
   ResponseFormat,
   RoomParticipantWithRoom,
   RoomParticipantWithRoomByUserId,
+  Room,
 } from "@backend/shared";
 
 const getRooms = async (): Promise<
@@ -34,4 +35,20 @@ const getRoomByUserId = async (
   }
 };
 
-export { getRooms, getRoomByUserId };
+const createDirectRoom = async (inputData: {
+  content: string;
+  otherId: string;
+}): Promise<ResponseFormat<Room> | undefined> => {
+  try {
+    const { data } = await axiosInstance.post<ResponseFormat<Room>>(
+      "/rooms/direct-room",
+      inputData
+    );
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+export { getRooms, getRoomByUserId, createDirectRoom };
