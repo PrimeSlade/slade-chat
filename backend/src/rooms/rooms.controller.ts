@@ -9,21 +9,37 @@ import {
   Session,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
-import { CreateRoomDto } from './dto/create-room.dto';
-import { UpdateRoomDto } from './dto/update-room.dto';
+
 import { UserSession } from '@thallesp/nestjs-better-auth';
 import {
   ResponseType,
+  Room,
   RoomParticipantWithRoom,
   RoomParticipantWithRoomByUserId,
 } from 'src/shared';
+import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
+import {
+  CreateDirectRoomDto,
+  createDirectRoomSchema,
+} from './dto/create-room.dto';
 
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
-  @Post()
-  create(@Body() createRoomDto: CreateRoomDto) {}
+  @Post('direct-room')
+  async createDirectRoom(
+    @Body(new ZodValidationPipe(createDirectRoomSchema))
+    body: CreateDirectRoomDto,
+    @Session() session: UserSession,
+  ): Promise<ResponseType<Room | RoomParticipantWithRoomByUserId>> {
+    const room = await this.roomsService.createDirectRoom(
+      body,
+      session.user.id,
+    );
+
+    return { data: room, message: 'Room created successfully' };
+  }
 
   @Get('me')
   async getRooms(

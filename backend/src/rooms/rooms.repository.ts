@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from 'generated/prisma/client';
 import { RoomType } from 'generated/prisma/enums';
 
 import { PrismaService } from 'src/prisma.service';
 import {
   RoomParticipantWithRoom,
   RoomParticipantWithRoomByUserId,
+  Room,
 } from 'src/shared';
 
 @Injectable()
@@ -79,6 +81,22 @@ export class RoomsReposiory {
               },
             },
           },
+        },
+      },
+    });
+  }
+
+  async createDirectRoom(
+    data: { myId: string; otherId: string },
+    trx?: Prisma.TransactionClient,
+  ): Promise<Room> {
+    const db = trx || this.prismaService;
+
+    return db.room.create({
+      data: {
+        type: RoomType.DIRECT,
+        participants: {
+          create: [{ userId: data.myId }, { userId: data.otherId }],
         },
       },
     });
