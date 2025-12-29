@@ -1,6 +1,19 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+type RoomLike = {
+  type: "DIRECT" | "GROUP";
+  name?: string | null;
+  image?: string | null;
+  participants: {
+    user: {
+      id: string;
+      name?: string | null;
+      image?: string | null;
+    };
+  }[];
+};
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -11,6 +24,9 @@ export const getInitials = (name: string) => {
     .split(" ")
     .map((word) => word[0])
     .slice(0, 2)
+    .map((char, index) =>
+      index === 0 ? char.toUpperCase() : char.toLowerCase()
+    )
     .join("");
 };
 
@@ -56,4 +72,25 @@ export const formatTimestamp = (timestamp: Date | string) => {
       day: "numeric",
     });
   }
+};
+
+export const getRoomDisplay = (room: RoomLike) => {
+  if (!room) {
+    return { displayName: "Unknown", avatarUrl: getInitials("Un") };
+  }
+
+  if (room.type === "DIRECT") {
+    const otherParticipant = room.participants[0];
+    return {
+      displayName: otherParticipant.user.name ?? "Unknown",
+      avatarUrl:
+        otherParticipant.user.image ??
+        getInitials(otherParticipant.user.image ?? "A"),
+    };
+  }
+
+  return {
+    displayName: room.name ?? "Unnamed Room",
+    avatarUrl: room.image ?? getInitials(room.name ?? "Ar"),
+  };
 };

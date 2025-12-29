@@ -3,6 +3,7 @@ import {
   ResponseFormat,
   RoomParticipantWithRoom,
   RoomParticipantWithRoomByUserId,
+  RoomParticipantWithRoomByRoomId,
   Room,
 } from "@backend/shared";
 
@@ -24,10 +25,23 @@ const getRoomByUserId = async (
   userId: string
 ): Promise<ResponseFormat<RoomParticipantWithRoomByUserId> | undefined> => {
   try {
-    console.log(userId);
     const { data } = await axiosInstance.get<
       ResponseFormat<RoomParticipantWithRoomByUserId>
     >(`/rooms/${userId}`);
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+const getMyRoomByRoomId = async (
+  roomId: string
+): Promise<ResponseFormat<RoomParticipantWithRoomByRoomId> | undefined> => {
+  try {
+    const { data } = await axiosInstance.get<
+      ResponseFormat<RoomParticipantWithRoomByRoomId>
+    >(`/rooms/me/${roomId}`);
     return data;
   } catch (error: any) {
     console.log(error.response.data);
@@ -51,4 +65,4 @@ const createDirectRoom = async (inputData: {
   }
 };
 
-export { getRooms, getRoomByUserId, createDirectRoom };
+export { getRooms, getRoomByUserId, getMyRoomByRoomId, createDirectRoom };

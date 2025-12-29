@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChatItem } from "./chat-item";
-import { getInitials } from "@/lib/utils";
+import { getInitials, getRoomDisplay } from "@/lib/utils";
 import { RoomParticipantWithRoom } from "@backend/shared";
 import { useRoomByUserId, useRooms } from "@/hooks/use-rooms";
 import { ChatItemSkeleton } from "./chat-skeletons";
@@ -201,20 +201,7 @@ export function ChatList() {
 
         const lastMessage = room.messages?.[0];
 
-        let displayName = room.name || "Unknown";
-        let avatarUrl: string | undefined;
-
-        if (room.type === "DIRECT") {
-          const otherParticipant = room.participants[0];
-          if (otherParticipant) {
-            displayName = otherParticipant.user.name!;
-            avatarUrl = otherParticipant.user.image || undefined;
-          } else {
-            displayName = "Unknown User";
-          }
-        }
-        // For GROUP chats, you could add a group avatar logic here if needed
-        // else { avatarUrl = room.image }
+        const { displayName, avatarUrl } = getRoomDisplay(room);
 
         const initials = getInitials(displayName);
 

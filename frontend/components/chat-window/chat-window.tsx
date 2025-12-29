@@ -1,12 +1,12 @@
 "use client";
 import ChatHeader from "./chat-header";
 import { useUserById } from "@/hooks/use-friends";
-import { useMyRoomByRoomId, useRoomByUserId } from "@/hooks/use-rooms";
+import { useMyRoomByRoomId } from "@/hooks/use-rooms";
 import ChatInput from "./chat-input";
 import { MessageList } from "../message/message-list";
 import { useEffect, useState } from "react";
 import { socket } from "@/lib/socket";
-import { getInitials } from "@/lib/utils";
+import { getInitials, getRoomDisplay } from "@/lib/utils";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -112,45 +112,19 @@ export function ChatWindow({
     },
   ];
 
-  let name = roomData?.data.room.name || "Unknown";
-  let image;
-
-  // let displayName = room.name || "Unknown";
-  // let avatarUrl: string | undefined;
-
-  // if (room.type === "DIRECT") {
-  //   const otherParticipant = room.participants[0];
-  //   if (otherParticipant) {
-  //     displayName = otherParticipant.user.name!;
-  //     avatarUrl = otherParticipant.user.image || undefined;
-  //   } else {
-  //     displayName = "Unknown User";
-  //   }
-  // }
-
-  if (isGhostMode && ghostUser) {
-    name = ghostUser?.data.name;
-    image = ghostUser?.data.image;
-  } else {
-    if (roomData?.data.room.type === "DIRECT") {
-      const otherParticipant = roomData.data.room.participants[0];
-      if (otherParticipant) {
-        name = otherParticipant.user.name;
-        image = otherParticipant.user.image;
-      } else {
-        name = "Unknown User";
-      }
-    } else {
-      image =
-        roomData?.data.room.image || getInitials(roomData?.data.room.name!);
-    }
-  }
+  const { displayName, avatarUrl } =
+    isGhostMode && ghostUser
+      ? {
+          displayName: ghostUser.data.name,
+          avatarUrl: ghostUser.data.image ?? getInitials(ghostUser.data.name),
+        }
+      : getRoomDisplay(roomData?.data.room!);
 
   return (
     <div className="flex h-screen flex-col">
       {/* Header */}
       <div className="border-b">
-        <ChatHeader name={name!} image={image!} />
+        <ChatHeader name={displayName} image={avatarUrl} />
       </div>
 
       <div className="flex-1 overflow-y-auto">
