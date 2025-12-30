@@ -14,7 +14,7 @@ export class RoomGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     const userId = req.session?.user?.id;
-    const roomId = req.query?.roomId;
+    const roomId = req.params?.roomId;
 
     if (!userId || !roomId) {
       throw new ForbiddenException('Invalid access');

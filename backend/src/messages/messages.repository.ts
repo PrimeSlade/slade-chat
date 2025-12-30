@@ -7,7 +7,7 @@ import { GetMessagesDto, Message } from '../shared';
 export class MessagesRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async getMessages({ cursor, limit, roomId }: GetMessagesDto): Promise<{
+  async getMessages({ roomId, cursor, limit }: GetMessagesDto): Promise<{
     messages: Message[];
     nextCursor: string | null;
     hasNextPage: boolean;

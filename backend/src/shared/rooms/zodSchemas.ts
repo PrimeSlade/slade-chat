@@ -1,4 +1,8 @@
-export {
-  createDirectRoomSchema,
-  type CreateDirectRoomDto,
-} from 'src/rooms/dto/create-room.dto';
+import z from 'zod';
+
+export const createDirectRoomSchema = z.object({
+  content: z.string().max(2000),
+  otherId: z.string(),
+});
+
+export type CreateDirectRoomDto = z.infer<typeof createDirectRoomSchema>;
