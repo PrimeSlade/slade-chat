@@ -13,7 +13,6 @@ export class MessagesService {
   async getMessages(query: GetMessagesDto): Promise<{
     messages: Message[];
     nextCursor: string | null;
-    hasNextPage: boolean;
   }> {
     return this.messagesRepository.getMessages(query);
   }

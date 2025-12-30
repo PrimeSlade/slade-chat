@@ -11,8 +11,12 @@ import {
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import {
+  CreateMessageBodyDto,
+  createMessageBodySchema,
   CreateMessageDto,
   createMessageSchema,
+  GetMessagesBodyDto,
+  getMessagesBodySchema,
   GetMessagesDto,
   getMessagesSchema,
   Message,
@@ -30,15 +34,17 @@ export class MessagesController {
   @Get('room/:roomId')
   async getMessages(
     @Param('roomId') roomId: string,
-    @Query(new ZodValidationPipe(getMessagesSchema)) query: GetMessagesDto,
+    @Query(new ZodValidationPipe(getMessagesBodySchema))
+    query: GetMessagesBodyDto,
   ): Promise<ControllerResponse<Message[]>> {
-    const { messages, hasNextPage, nextCursor } =
-      await this.messagesService.getMessages({ roomId, ...query });
+    const { messages, nextCursor } = await this.messagesService.getMessages({
+      roomId,
+      ...query,
+    });
     return {
       data: messages,
       message: 'Messages fetched sucessfully',
       pagination: {
-        hasNextPage,
         nextCursor,
       },
     };
@@ -47,7 +53,8 @@ export class MessagesController {
   @Post('room/:roomId')
   async createMessage(
     @Param('roomId') roomId: string,
-    @Body(new ZodValidationPipe(createMessageSchema)) body: CreateMessageDto,
+    @Body(new ZodValidationPipe(createMessageBodySchema))
+    body: CreateMessageBodyDto,
     @Session() session: UserSession,
   ): Promise<ControllerResponse<Message>> {
     const message = await this.messagesService.createMessage({

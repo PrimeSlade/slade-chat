@@ -10,7 +10,6 @@ export class MessagesRepository {
   async getMessages({ roomId, cursor, limit }: GetMessagesDto): Promise<{
     messages: Message[];
     nextCursor: string | null;
-    hasNextPage: boolean;
   }> {
     const messages = await this.prismaService.message.findMany({
       where: {
@@ -35,7 +34,6 @@ export class MessagesRepository {
     return {
       messages,
       nextCursor,
-      hasNextPage,
     };
   }
 

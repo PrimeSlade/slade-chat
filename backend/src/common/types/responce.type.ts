@@ -1,6 +1,5 @@
 export interface Pagination {
   nextCursor: string | null;
-  hasNextPage: boolean;
 }
 
 export interface ControllerResponse<T> {
