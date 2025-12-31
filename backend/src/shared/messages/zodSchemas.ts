@@ -11,8 +11,8 @@ export const createMessageBodySchema = createMessageSchema.omit({
 
 export const getMessagesSchema = z.object({
   roomId: z.string(),
-  cursor: z.string().nullable(),
-  limit: z.number().optional().default(20),
+  cursor: z.string().optional().nullable(),
+  limit: z.coerce.number().default(20),
 });
 
 export const getMessagesBodySchema = getMessagesSchema.omit({

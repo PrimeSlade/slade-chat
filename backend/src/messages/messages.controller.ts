@@ -20,6 +20,7 @@ import {
   GetMessagesDto,
   getMessagesSchema,
   Message,
+  MessageWithSender,
 } from '../shared';
 import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
 import { Session, UserSession } from '@thallesp/nestjs-better-auth';
@@ -36,7 +37,7 @@ export class MessagesController {
     @Param('roomId') roomId: string,
     @Query(new ZodValidationPipe(getMessagesBodySchema))
     query: GetMessagesBodyDto,
-  ): Promise<ControllerResponse<Message[]>> {
+  ): Promise<ControllerResponse<MessageWithSender[]>> {
     const { messages, nextCursor } = await this.messagesService.getMessages({
       roomId,
       ...query,

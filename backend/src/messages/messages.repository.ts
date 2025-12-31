@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/prisma.service';
-import { GetMessagesDto, Message } from '../shared';
+import { GetMessagesDto, Message, MessageWithSender } from '../shared';
 
 @Injectable()
 export class MessagesRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getMessages({ roomId, cursor, limit }: GetMessagesDto): Promise<{
-    messages: Message[];
+    messages: MessageWithSender[];
     nextCursor: string | null;
   }> {
     const messages = await this.prismaService.message.findMany({
@@ -19,6 +19,9 @@ export class MessagesRepository {
         cursor: { id: cursor },
         skip: 1,
       }),
+      include: {
+        sender: true,
+      },
       orderBy: { createdAt: 'desc' },
       take: limit + 1,
     });
