@@ -1,6 +1,6 @@
 import { cn, getInitials } from "@/lib/utils"; // shadcn helper for classes
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
 
 interface MessageBubbleProps {
   content: string;
@@ -50,14 +50,18 @@ export default function MessageBubble({
         )}
       >
         <p>{content}</p>
-        <span
-          className={cn(
-            "text-[10px] mt-1 flex",
-            isMine ? "text-blue-100 justify-end" : "text-gray-400 justify-start"
-          )}
-        >
-          {format(new Date(createdAt), "HH:mm")}
-        </span>
+        {isToday(new Date(createdAt)) && (
+          <span
+            className={cn(
+              "text-[10px] mt-1 flex",
+              isMine
+                ? "text-blue-100 justify-end"
+                : "text-gray-400 justify-start"
+            )}
+          >
+            {format(new Date(createdAt), "HH:mm")}
+          </span>
+        )}
       </div>
     </div>
   );
