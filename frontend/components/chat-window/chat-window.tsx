@@ -4,9 +4,11 @@ import { useUserById } from "@/hooks/use-friends";
 import { useMyRoomByRoomId } from "@/hooks/use-rooms";
 import ChatInput from "./chat-input";
 import { MessageList } from "../message/message-list";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { socket } from "@/lib/socket";
 import { getInitials, getRoomDisplay } from "@/lib/utils";
+import { useMessages } from "@/hooks/use-messages";
+import { useInView } from "react-intersection-observer";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -37,81 +39,6 @@ export function ChatWindow({
     };
   }, []);
 
-  const mockMessages = [
-    {
-      id: "1",
-      content: "Hey! How are you?",
-      createdAt: new Date(Date.now() - 3600000),
-      senderId: "user1",
-      sender: {
-        id: "user1",
-        name: "John Doe",
-        email: "john@example.com",
-        emailVerified: true,
-        image: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        bio: "Software developer",
-        username: "johndoe",
-      },
-      roomId: roomId || "room1",
-    },
-    {
-      id: "2",
-      content: "I'm doing great, thanks! How about you?",
-      createdAt: new Date(Date.now() - 3000000),
-      senderId: "e6vGwkzyi4mAt418HLFs9teBRtGeCY86",
-      sender: {
-        id: "e6vGwkzyi4mAt418HLFs9teBRtGeCY86",
-        name: "Jane Smith",
-        email: "jane@example.com",
-        emailVerified: true,
-        image: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        bio: "Designer",
-        username: "janesmith",
-      },
-      roomId: roomId || "room1",
-    },
-    {
-      id: "3",
-      content: "Pretty good! Want to grab coffee later?",
-      createdAt: new Date(Date.now() - 1800000),
-      senderId: "user1",
-      sender: {
-        id: "user1",
-        name: "John Doe",
-        email: "john@example.com",
-        emailVerified: true,
-        image: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        bio: "Software developer",
-        username: "johndoe",
-      },
-      roomId: roomId || "room1",
-    },
-    {
-      id: "4",
-      content: "Sure! What time works for you?",
-      createdAt: new Date(Date.now() - 900000),
-      senderId: "user1",
-      sender: {
-        id: "user1",
-        name: "John Doe",
-        email: "jane@example.com",
-        emailVerified: true,
-        image: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        bio: "Designer",
-        username: "janesmith",
-      },
-      roomId: roomId || "room1",
-    },
-  ];
-
   const { displayName, avatarUrl } =
     isGhostMode && ghostUser
       ? {
@@ -126,16 +53,7 @@ export function ChatWindow({
       <div className="border-b">
         <ChatHeader name={displayName} image={avatarUrl} />
       </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {mockMessages.length > 0 ? (
-          <MessageList messages={mockMessages} />
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            {isGhostMode ? "Start a new conversation" : "No messages yet"}
-          </div>
-        )}
-      </div>
+      <MessageList roomId={roomId} isGhostMode />
 
       {/* Input at bottom */}
       <div className="border-t">

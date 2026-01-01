@@ -4,6 +4,7 @@ import {
   Message,
   GetMessagesDto,
   CreateMessageDto,
+  MessageWithSender,
 } from "@backend/shared";
 
 const createMessage = async ({
