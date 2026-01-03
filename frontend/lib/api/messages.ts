@@ -31,7 +31,7 @@ const getMessages = async ({ roomId, ...params }: GetMessagesDto) => {
     return data;
   } catch (error: any) {
     console.log(error.response.data);
-    throw new Error(error.response.data.message);
+    throw error;
   }
 };
 

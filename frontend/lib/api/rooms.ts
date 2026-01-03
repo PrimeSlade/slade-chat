@@ -45,7 +45,7 @@ const getMyRoomByRoomId = async (
     return data;
   } catch (error: any) {
     console.log(error.response.data);
-    throw new Error(error.response.data.message);
+    throw error;
   }
 };
 

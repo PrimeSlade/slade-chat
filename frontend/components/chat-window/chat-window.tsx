@@ -11,6 +11,8 @@ import { useMessages } from "@/hooks/use-messages";
 import { Spinner } from "../ui/spinner";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageWithSender, ResponseFormat } from "@backend/shared";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -23,10 +25,12 @@ export function ChatWindow({
   userId,
   isGhostMode = false,
 }: ChatWindowProps) {
+  const router = useRouter();
+
   const { data: ghostUser, isLoading: isLoadingGhostUser } = useUserById(
     userId!
   );
-  const { data: roomData } = useMyRoomByRoomId(roomId!);
+  const { data: roomData, error: fetchRoomError } = useMyRoomByRoomId(roomId!);
 
   const queryClient = useQueryClient();
 
@@ -36,10 +40,23 @@ export function ChatWindow({
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
+    error: fetchMessageError,
   } = useMessages({
     roomId: roomId!,
     limit: 20,
   });
+
+  const error = fetchMessageError || fetchRoomError;
+
+  useEffect(() => {
+    if (error && axios.isAxiosError(error)) {
+      const statusCode = error.response?.data?.statusCode;
+
+      if (statusCode === 403 || statusCode === 404) {
+        router.replace("/chat");
+      }
+    }
+  }, [error, router]);
 
   const messages =
     messagesData?.pages
