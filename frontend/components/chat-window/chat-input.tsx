@@ -31,6 +31,11 @@ export default function ChatInput({
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: { message: "" },
+  });
+
   const { mutate: directRoomMutate } = useMutation({
     mutationFn: createDirectRoom,
     onSuccess: (data) => {
@@ -41,14 +46,10 @@ export default function ChatInput({
 
   const { mutate: createMessageMutate } = useMutation({
     mutationFn: createMessage,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      form.reset();
     },
-  });
-
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: { message: "" },
   });
 
   const messageValue = form.watch("message");
