@@ -4,7 +4,7 @@ import { useUserById } from "@/hooks/use-friends";
 import { useMyRoomByRoomId } from "@/hooks/use-rooms";
 import ChatInput from "./chat-input";
 import { MessageList } from "../message/message-list";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { socket } from "@/lib/socket";
 import { getInitials, getRoomDisplay } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { MessageWithSender, ResponseFormat } from "@backend/shared";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { MessageSkeletonLoader } from "./message-skeleton-loader";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -30,6 +31,7 @@ export function ChatWindow({
   const { data: ghostUser, isLoading: isLoadingGhostUser } = useUserById(
     userId!
   );
+
   const { data: roomData, error: fetchRoomError } = useMyRoomByRoomId(roomId!);
 
   const queryClient = useQueryClient();
@@ -58,10 +60,13 @@ export function ChatWindow({
     }
   }, [error, router]);
 
-  const messages =
-    messagesData?.pages
-      .flatMap((page) => page?.data)
-      .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt)) ?? [];
+  const messages = useMemo(() => {
+    return (
+      messagesData?.pages
+        .flatMap((page) => page?.data)
+        .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt)) ?? []
+    );
+  }, [messagesData]);
 
   useEffect(() => {
     console.log("Socket connected:", socket.connected);
@@ -109,11 +114,7 @@ export function ChatWindow({
       </div>
 
       {isLoading && messages.length === 0 ? (
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <div className="h-full flex items-center justify-center">
-            <Spinner className="size-8" />
-          </div>
-        </div>
+        <MessageSkeletonLoader />
       ) : messages.length > 0 ? (
         <MessageList
           messages={messages}

@@ -1,10 +1,10 @@
-// components/message-list.tsx
 import { useEffect, useRef } from "react";
 import MessageBubble from "./message-bubble";
 import { useSession } from "@/lib/auth-client";
 import { useInView } from "react-intersection-observer";
 import { MessageWithSender } from "@backend/shared";
 import { Spinner } from "../ui/spinner";
+import { formatDateLabelForChatWindow } from "@/lib/utils";
 
 interface MessageListProps {
   messages: MessageWithSender[];
@@ -76,19 +76,38 @@ export function MessageList({
           <Spinner className="size-8" />
         </div>
       )}
-      {messages.map((msg) => {
+      {messages.map((msg, index) => {
         const isMine = msg.senderId === session?.user?.id;
 
+        const previousMessage = messages[index - 1];
+
+        const currentDateLabel = formatDateLabelForChatWindow(msg.createdAt);
+
+        const previousDateLabel = previousMessage
+          ? formatDateLabelForChatWindow(previousMessage.createdAt)
+          : null;
+
+        const showDate = currentDateLabel !== previousDateLabel;
+
         return (
-          <MessageBubble
-            key={msg.id}
-            content={msg.content}
-            createdAt={msg.createdAt}
-            isMine={isMine}
-            senderName={msg.sender.name}
-            senderAvatar={msg.sender.image!}
-            showAvatar={!isMine}
-          />
+          <>
+            {showDate && (
+              <div className="flex justify-center my-4">
+                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full">
+                  {currentDateLabel}
+                </span>
+              </div>
+            )}
+            <MessageBubble
+              key={msg.id}
+              content={msg.content}
+              createdAt={msg.createdAt}
+              isMine={isMine}
+              senderName={msg.sender.name}
+              senderAvatar={msg.sender.image!}
+              showAvatar={!isMine}
+            />
+          </>
         );
       })}
 

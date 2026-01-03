@@ -40,8 +40,10 @@ export const truncate = (text: string, length: number) => {
 export const formatTimestamp = (timestamp: Date | string) => {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
+
   const oneWeekAgo = new Date(today);
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -93,4 +95,32 @@ export const getRoomDisplay = (room: RoomLike) => {
     displayName: room.name ?? "Unnamed Room",
     avatarUrl: room.image ?? getInitials(room.name ?? "Ar"),
   };
+};
+
+export const isSameDay = (date1: Date | string, date2: Date | string) => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
+
+export const formatDateLabelForChatWindow = (dateStr: Date | string) => {
+  const date = new Date(dateStr);
+
+  const today = new Date();
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (isSameDay(date, today)) return "Today";
+  if (isSameDay(date, yesterday)) return "Yesterday";
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };

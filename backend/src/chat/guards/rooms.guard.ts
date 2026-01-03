@@ -11,9 +11,6 @@ export class RoomGuard implements CanActivate {
     const client: Socket = context.switchToWs().getClient();
     const data = context.switchToWs().getData();
 
-    console.log('from guard ', client.data.user);
-    console.log('room data ', data);
-
     const room = await this.prismaService.roomParticipant.findFirst({
       where: {
         userId: client.data.user.id,
@@ -24,8 +21,6 @@ export class RoomGuard implements CanActivate {
     if (!room) {
       throw new WsException('You are not a member of this room');
     }
-
-    console.log('PASS');
 
     return true;
   }
