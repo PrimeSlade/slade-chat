@@ -11,22 +11,31 @@ import { RoomsModule } from './rooms/rooms.module';
 import { MessagesModule } from './messages/messages.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis, { Keyv } from '@keyv/redis';
+import { CacheableMemory } from 'cacheable';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule.forRoot({ auth }),
+
     CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         return {
           stores: [
+            new Keyv({
+              store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
+            }),
             new KeyvRedis(
-              `redis://${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
+              `redis://default:${configService.get('REDIS_PASSWORD')}@${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
             ),
           ],
         };
       },
+      inject: [ConfigService],
     }),
+
     UsersModule,
     PrismaModule,
     ChatModule,

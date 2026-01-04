@@ -65,7 +65,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const newCount = currentCount + 1;
 
-    await this.cacheManager.set(`user:${userId}:count`, newCount + 1, 0);
+    console.log('New count ', newCount);
+
+    await this.cacheManager.set(`user:${userId}:count`, newCount);
 
     if (newCount === 1) {
       this.server.emit('user_status', {
@@ -85,7 +87,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const newCount = Math.max(0, currentCount - 1);
 
-    await this.cacheManager.set(`user:${userId}:count`, newCount, 0);
+    console.log('New count ', newCount);
+
+    await this.cacheManager.set(`user:${userId}:count`, newCount);
 
     if (newCount === 0) {
       const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
