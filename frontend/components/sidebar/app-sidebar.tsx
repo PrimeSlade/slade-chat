@@ -8,6 +8,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import Header from "./header";
+import SignOutButton from "./sign-out-button";
 
 export default function AppSidebar() {
   return (
@@ -21,7 +22,9 @@ export default function AppSidebar() {
         </SidebarGroup>
         <SidebarGroup />
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter>
+        <SignOutButton />
+      </SidebarFooter>
     </Sidebar>
   );
 }

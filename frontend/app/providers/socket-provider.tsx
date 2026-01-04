@@ -2,12 +2,23 @@
 
 import { ReactNode, useEffect } from "react";
 import { socket } from "@/lib/socket";
+import { authClient } from "@/lib/auth-client";
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
-    socket.connect();
+    const connectSocket = async () => {
+      const { data } = await authClient.token();
+      if (!data?.token) return;
 
-    // 3. Cleanup on app unmount
+      socket.auth = {
+        token: data.token,
+      };
+
+      socket.connect();
+    };
+
+    connectSocket();
+
     return () => {
       socket.disconnect();
     };
