@@ -1,9 +1,9 @@
 import 'dotenv/config';
 
-import { betterAuth, config } from 'better-auth';
+import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '../../generated/prisma/client';
-import { jwt } from 'better-auth/plugins';
+import { jwt, openAPI } from 'better-auth/plugins';
 
 const prisma = new PrismaClient();
 
@@ -11,6 +11,7 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
+  secret: process.env.BETTER_AUTH_SECRET,
   user: {
     additionalFields: {
       bio: {
@@ -24,7 +25,7 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [jwt()],
+  plugins: [openAPI(), jwt()],
 
   emailAndPassword: {
     enabled: true,
@@ -33,7 +34,7 @@ export const auth = betterAuth({
     disableOriginCheck: true, //Only use this during development!
   },
   trustedOrigins: ['http://localhost:3000'],
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: process.env.BASE_URL,
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
