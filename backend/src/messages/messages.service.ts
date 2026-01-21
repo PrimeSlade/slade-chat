@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { MessagesRepository } from './messages.repository';
 import { GetMessagesDto, Message, MessageWithSender } from 'src/shared';
-import { ChatGateway } from 'src/chat/chat.gateway';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class MessagesService {
   constructor(
     private readonly messagesRepository: MessagesRepository,
-    private readonly chatGateway: ChatGateway,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getMessages(query: GetMessagesDto): Promise<{
@@ -24,9 +24,7 @@ export class MessagesService {
   }): Promise<MessageWithSender> {
     const message = await this.messagesRepository.createMessage(data);
 
-    this.chatGateway.server
-      .to(message.roomId)
-      .emit('new_message', { data: message });
+    this.eventEmitter.emit('message.created', message.roomId, message);
 
     return message;
   }

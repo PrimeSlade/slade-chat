@@ -9,7 +9,7 @@ import {
 } from 'src/shared';
 import { MessagesRepository } from 'src/messages/messages.repository';
 import { PrismaService } from 'src/prisma.service';
-import { ChatGateway } from 'src/chat/chat.gateway';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class RoomsService {
@@ -17,7 +17,7 @@ export class RoomsService {
     private readonly prismaService: PrismaService,
     private readonly roomsRepository: RoomsReposiory,
     private readonly messagesRepositroy: MessagesRepository,
-    private readonly chatGateway: ChatGateway,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createDirectRoom(
@@ -36,10 +36,7 @@ export class RoomsService {
         roomId: existingRoom.roomId,
       });
 
-      //web socket
-      this.chatGateway.server
-        .to(existingRoom.roomId)
-        .emit('new_message', { data: message });
+      this.eventEmitter.emit('message.created', existingRoom.roomId, message);
 
       return existingRoom;
     }
@@ -68,9 +65,8 @@ export class RoomsService {
 
       //web socket
       console.log(`📤 Emitting new_message to room: ${room.id}`, message);
-      this.chatGateway.server
-        .to(room.id)
-        .emit('new_message', { data: message });
+
+      this.eventEmitter.emit('message.created', room.id, message);
 
       return room;
     });

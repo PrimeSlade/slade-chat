@@ -14,6 +14,8 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { Server, Socket } from 'socket.io';
 import { RoomGuard } from './guards/rooms.guard';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { OnEvent } from '@nestjs/event-emitter';
+import { MessageWithSender } from 'src/shared';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -75,7 +77,7 @@ export class ChatGateway
 
     const newCount = currentCount + 1;
 
-    console.log('New count ', newCount);
+    // console.log('New count ', newCount);
 
     await this.cacheManager.set(`user:${userId}:count`, newCount);
 
@@ -97,7 +99,7 @@ export class ChatGateway
 
     const newCount = Math.max(0, currentCount - 1);
 
-    console.log('New count ', newCount);
+    // console.log('New count ', newCount);
 
     await this.cacheManager.set(`user:${userId}:count`, newCount);
 
@@ -128,5 +130,18 @@ export class ChatGateway
   ) {
     console.log(`Client ${client.id} leaving room: ${data.roomId}`);
     client.leave(data.roomId);
+  }
+
+  @SubscribeMessage('typing')
+  handleTyping(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.broadcast.to(data.roomId).emit('user_typing', data);
+  }
+
+  @OnEvent('message.created')
+  handleMessageCreatedEvent(roomId: string, payload: MessageWithSender) {
+    this.server.to(roomId).emit('new_message', { data: payload });
   }
 }
