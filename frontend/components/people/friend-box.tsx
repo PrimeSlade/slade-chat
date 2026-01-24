@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getInitials } from "@/lib/utils";
+import { useRoomByUserId } from "@/hooks/use-rooms";
 
 interface FriendBoxProps {
   user: User;
@@ -30,6 +31,9 @@ interface FriendBoxProps {
 
 export function FriendBox({ user, variant, status }: FriendBoxProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const { data: roomData } = useRoomByUserId(user.id);
 
   const acceptMutation = useMutation({
     mutationFn: acceptFriend,
@@ -76,7 +80,12 @@ export function FriendBox({ user, variant, status }: FriendBoxProps) {
     mutations[type].mutate({ id: user.id });
   };
 
-  const router = useRouter();
+  const handleMessageClick = () => {
+    const targetPath = roomData?.data?.roomId
+      ? `/chat/${roomData.data.roomId}`
+      : `/chat/dm/${user.id}`;
+    router.push(targetPath);
+  };
 
   return (
     <div className="p-4 rounded-lg cursor-pointer transition-colors flex items-center space-x-4 border">
@@ -93,13 +102,7 @@ export function FriendBox({ user, variant, status }: FriendBoxProps) {
       </div>
       {variant === "friend" && (
         <div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              router.push(`/chat/dm/${user.id}`);
-            }}
-          >
+          <Button variant="ghost" size="icon" onClick={handleMessageClick}>
             <MessageSquare className="h-4 w-4" />
           </Button>
           <DropdownMenu>
