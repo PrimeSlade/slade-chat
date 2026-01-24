@@ -23,14 +23,20 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       isGlobal: true,
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
+        const redisUrl = `redis://default:${configService.get('REDIS_PASSWORD')}@${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`;
+
+        const redisStore = new KeyvRedis(redisUrl);
+
+        redisStore.on('error', (err) => {
+          console.error('Redis connection error:', err);
+        });
+
         return {
           stores: [
             new Keyv({
               store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
             }),
-            new KeyvRedis(
-              `redis://default:${configService.get('REDIS_PASSWORD')}@${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
-            ),
+            redisStore,
           ],
         };
       },
