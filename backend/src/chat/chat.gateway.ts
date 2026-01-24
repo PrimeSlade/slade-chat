@@ -132,12 +132,12 @@ export class ChatGateway
     client.leave(data.roomId);
   }
 
-  @SubscribeMessage('typing')
+  @SubscribeMessage('user_typing')
   handleTyping(
-    @MessageBody() data: { roomId: string },
+    @MessageBody() data: { roomId: string; userId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    client.broadcast.to(data.roomId).emit('user_typing', data);
+    client.broadcast.to(data.roomId).emit('user_typing', data.userId);
   }
 
   @OnEvent('message.created')

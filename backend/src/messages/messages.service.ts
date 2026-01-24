@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MessagesRepository } from './messages.repository';
-import { GetMessagesDto, Message, MessageWithSender } from 'src/shared';
+import { GetMessagesDto, MessageWithSender } from 'src/shared';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
