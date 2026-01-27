@@ -31,10 +31,16 @@ export default function UserStatusProvider({
       );
     };
 
+    const handleRoomInvalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+    };
+
     socket.on("user_status", handleStatus);
+    socket.on("room_invalidate", handleRoomInvalidate);
 
     return () => {
       socket.off("user_status", handleStatus);
+      socket.off("room_invalidate", handleRoomInvalidate);
     };
   }, [socket, queryClient]);
 
