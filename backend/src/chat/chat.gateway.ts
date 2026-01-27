@@ -15,7 +15,7 @@ import { Server, Socket } from 'socket.io';
 import { RoomGuard } from './guards/rooms.guard';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { OnEvent } from '@nestjs/event-emitter';
-import { MessageWithSender } from 'src/shared';
+import { MessageWithSender, RoomParticipantWithRoomByUserId } from 'src/shared';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -71,6 +71,9 @@ export class ChatGateway
 
     const userId = client.data.user.id;
 
+    // Join a room with the user's ID for targeted notifications
+    client.join(userId);
+
     //checking status
     const currentCount =
       (await this.cacheManager.get<number>(`user:${userId}:count`)) || 0;
@@ -93,6 +96,9 @@ export class ChatGateway
     console.log(`Client disconnected: ${client.id}`);
 
     const userId = client.data.user.id;
+
+    // Leave the user's room
+    client.leave(userId);
 
     const currentCount =
       (await this.cacheManager.get<number>(`user:${userId}:count`)) || 0;
@@ -140,8 +146,13 @@ export class ChatGateway
     client.broadcast.to(data.roomId).emit('user_typing', data.userId);
   }
 
-  @OnEvent('message.created')
+  @OnEvent('message_created')
   handleMessageCreatedEvent(roomId: string, payload: MessageWithSender) {
     this.server.to(roomId).emit('new_message', { data: payload });
+  }
+
+  @OnEvent('room_created')
+  handleDriectRoomCreatedEvent(userId: string) {
+    this.server.to(userId).emit('room_invalidate');
   }
 }
