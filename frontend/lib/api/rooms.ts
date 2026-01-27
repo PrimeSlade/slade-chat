@@ -65,4 +65,26 @@ const createDirectRoom = async (inputData: {
   }
 };
 
-export { getRooms, getRoomByUserId, getMyRoomByRoomId, createDirectRoom };
+const createGroupRoom = async (inputData: {
+  groupName: string;
+  friendIds: string[];
+}): Promise<ResponseFormat<Room> | undefined> => {
+  try {
+    const { data } = await axiosInstance.post<ResponseFormat<Room>>(
+      "/rooms/group-room",
+      inputData
+    );
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+export {
+  getRooms,
+  getRoomByUserId,
+  getMyRoomByRoomId,
+  createDirectRoom,
+  createGroupRoom,
+};

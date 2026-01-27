@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useFriends } from "@/hooks/use-friends";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createGroupRoom } from "@/lib/api/rooms";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,8 @@ export function CreateGroupDialog({
   onOpenChange,
   otherUserName,
 }: CreateGroupDialogProps) {
+  const queryClient = useQueryClient();
+
   const { data: friendsData } = useFriends();
   const { data: session } = useSession();
 
@@ -48,13 +52,24 @@ export function CreateGroupDialog({
     new Set()
   );
 
+  const { mutate: createGroup, isPending } = useMutation({
+    mutationFn: createGroupRoom,
+    onSuccess: () => {
+      onOpenChange(false);
+      setGroupName(`${session?.user.name} & ${otherUserName}`);
+      setSelectedFriends(new Set());
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+    },
+    onError: (error) => {
+      console.error("Failed to create group:", error);
+    },
+  });
+
   const filteredFriends = friends.filter(
     (friend) =>
       friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       friend.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  console.log(filteredFriends);
 
   const toggleFriend = (friendId: string) => {
     const newSelected = new Set(selectedFriends);
@@ -67,12 +82,14 @@ export function CreateGroupDialog({
   };
 
   const handleCreate = () => {
-    // TODO: Implement group creation logic
-    console.log("Creating group:", {
-      groupName,
-      selectedFriends: Array.from(selectedFriends),
+    if (!groupName.trim() || selectedFriends.size === 0) {
+      return;
+    }
+
+    createGroup({
+      groupName: groupName,
+      friendIds: Array.from(selectedFriends),
     });
-    onOpenChange(false);
   };
 
   return (
@@ -140,8 +157,14 @@ export function CreateGroupDialog({
         </div>
 
         <DialogFooter>
-          <Button onClick={handleCreate} className="w-full">
-            Create
+          <Button
+            onClick={handleCreate}
+            className="w-full"
+            disabled={
+              isPending || !groupName.trim() || selectedFriends.size === 0
+            }
+          >
+            {isPending ? "Creating..." : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

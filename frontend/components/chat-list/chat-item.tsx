@@ -4,12 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { cn, formatTimestamp, truncate } from "@/lib/utils";
-import { useState } from "react";
 
 type ChatItemProps = {
   name: string;
   lastMessage: string;
-  timestamp: Date;
+  timestamp: Date | null;
   unreadCount: number;
   initials: string;
   roomId: string;
@@ -50,7 +49,7 @@ export function ChatItem({
         <div className="flex items-center justify-between">
           <h3 className="font-semibold truncate">{name}</h3>
           <p className="text-xs text-muted-foreground">
-            {formatTimestamp(timestamp)}
+            {timestamp ? formatTimestamp(timestamp) : null}
           </p>
         </div>
         <div className="flex items-start justify-between gap-2">

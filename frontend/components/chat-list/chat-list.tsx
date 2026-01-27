@@ -17,6 +17,8 @@ export function ChatList() {
 
   const { data: roomsData } = useRooms();
 
+  console.log(roomsData);
+
   const { data: userData } = useUserById(userId as string);
 
   const { data: userStatuses } = useFriendsStatus();
@@ -84,7 +86,9 @@ export function ChatList() {
             roomId={room.id}
             name={displayName}
             lastMessage={lastMessage?.content || "No messages yet"}
-            timestamp={new Date(lastMessage.createdAt)}
+            timestamp={
+              lastMessage?.createdAt ? new Date(lastMessage?.createdAt) : null
+            }
             unreadCount={0}
             initials={initials}
             avatarUrl={avatarUrl}
