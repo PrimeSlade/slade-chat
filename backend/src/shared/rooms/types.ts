@@ -69,12 +69,12 @@ export type RoomParticipantWithRoomByRoomId = Prisma.RoomParticipantGetPayload<{
             };
           };
         };
+        _count: {
+          select: {
+            participants: true;
+          };
+        };
       };
     };
   };
 }>;
-
-export interface RoomParticipantCount {
-  roomId: string;
-  totalMembers: number;
-}

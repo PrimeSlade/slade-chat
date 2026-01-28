@@ -95,17 +95,4 @@ export class RoomsService {
   async createGroupRoom(data: CreateGroupRoomDto, myId: string): Promise<Room> {
     return this.roomsRepository.createGroupRoom(data, myId);
   }
-
-  async getRoomParticipantCount(
-    roomId: string,
-  ): Promise<{ roomId: string; totalMembers: number }> {
-    const totalMembers = await this.roomsRepository.countRoomParticipants(
-      roomId,
-    );
-
-    return {
-      roomId,
-      totalMembers,
-    };
-  }
 }

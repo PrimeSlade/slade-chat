@@ -82,25 +82,10 @@ const createGroupRoom = async (inputData: {
   }
 };
 
-const getRoomParticipantCount = async (
-  roomId: string
-): Promise<ResponseFormat<RoomParticipantCount> | undefined> => {
-  try {
-    const { data } = await axiosInstance.get<
-      ResponseFormat<RoomParticipantCount>
-    >(`/rooms/${roomId}/participants/count`);
-    return data;
-  } catch (error: any) {
-    console.log(error.response.data);
-    throw new Error(error.response.data.message);
-  }
-};
-
 export {
   getRooms,
   getRoomByUserId,
   getMyRoomByRoomId,
   createDirectRoom,
   createGroupRoom,
-  getRoomParticipantCount,
 };

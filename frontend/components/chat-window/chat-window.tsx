@@ -1,7 +1,7 @@
 "use client";
 import ChatHeader from "./chat-header";
 import { useUserById } from "@/hooks/use-friends";
-import { useMyRoomByRoomId, useRoomParticipantCount } from "@/hooks/use-rooms";
+import { useMyRoomByRoomId } from "@/hooks/use-rooms";
 import ChatInput from "./chat-input";
 import { MessageList } from "../message/message-list";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -55,8 +55,6 @@ export function ChatWindow({
     roomId: roomId!,
     limit: 20,
   });
-
-  const { data: countData } = useRoomParticipantCount(roomId!);
 
   const error = fetchMessageError || fetchRoomError;
 
@@ -161,7 +159,7 @@ export function ChatWindow({
             roomId={roomData!.data.roomId}
             name={roomData!.data.room.name!}
             image={roomData!.data.room.image!}
-            totalMembers={countData?.data.totalMembers ?? 0}
+            totalMembers={roomData!.data.room._count.participants ?? 0}
             onlineMembers={0} // Calculate from participant status
           />
         )}
