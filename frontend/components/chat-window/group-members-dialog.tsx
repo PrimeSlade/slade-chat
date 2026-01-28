@@ -20,17 +20,21 @@ import { useSession } from "@/lib/auth-client";
 import { chooseFriends } from "@/lib/hanldeFriends";
 import { getInitials } from "@/lib/utils";
 
-interface CreateGroupDialogProps {
+interface GroupMembersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  otherUserName: string;
+  otherUserName?: string;
+  roomId?: string;
+  isInviteMode?: boolean; // true = invite members, false = create group
 }
 
-export function CreateGroupDialog({
+export function GroupMembersDialog({
   open,
   onOpenChange,
   otherUserName,
-}: CreateGroupDialogProps) {
+  roomId,
+  isInviteMode = false,
+}: GroupMembersDialogProps) {
   const queryClient = useQueryClient();
 
   const { data: friendsData } = useFriends();
@@ -52,7 +56,7 @@ export function CreateGroupDialog({
     new Set()
   );
 
-  const { mutate: createGroup, isPending } = useMutation({
+  const { mutate: createGroup, isPending: isCreating } = useMutation({
     mutationFn: createGroupRoom,
     onSuccess: () => {
       onOpenChange(false);
@@ -64,6 +68,24 @@ export function CreateGroupDialog({
       console.error("Failed to create group:", error);
     },
   });
+
+  // TODO: Add invite members mutation
+  const { mutate: inviteMembers, isPending: isInviting } = useMutation({
+    mutationFn: async (data: { roomId: string; memberIds: string[] }) => {
+      // Add your invite members API call here
+      throw new Error("Not implemented");
+    },
+    onSuccess: () => {
+      onOpenChange(false);
+      setSelectedFriends(new Set());
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+    },
+    onError: (error) => {
+      console.error("Failed to invite members:", error);
+    },
+  });
+
+  const isPending = isCreating || isInviting;
 
   const filteredFriends = friends.filter(
     (friend) =>
@@ -81,45 +103,55 @@ export function CreateGroupDialog({
     setSelectedFriends(newSelected);
   };
 
-  const handleCreate = () => {
-    if (!groupName.trim() || selectedFriends.size === 0) {
-      return;
-    }
+  const handleSubmit = () => {
+    if (selectedFriends.size === 0) return;
 
-    createGroup({
-      groupName: groupName,
-      friendIds: Array.from(selectedFriends),
-    });
+    if (isInviteMode) {
+      if (!roomId) return;
+      inviteMembers({
+        roomId,
+        memberIds: Array.from(selectedFriends),
+      });
+    } else {
+      if (!groupName.trim()) return;
+      createGroup({
+        groupName: groupName,
+        friendIds: Array.from(selectedFriends),
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Group</DialogTitle>
+          <DialogTitle>
+            {isInviteMode ? "Add Members" : "Create Group"}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {/* Default Group Image */}
-          <div className="flex justify-center">
-            <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center">
-              <Users className="h-10 w-10 text-muted-foreground" />
-            </div>
-          </div>
+          {!isInviteMode && (
+            <>
+              <div className="flex justify-center">
+                <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center">
+                  <Users className="h-10 w-10 text-muted-foreground" />
+                </div>
+              </div>
 
-          {/* Group Name Input */}
-          <div className="space-y-2">
-            <Label htmlFor="group-name">Group Name</Label>
-            <Input
-              id="group-name"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Enter group name"
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="group-name">Group Name</Label>
+                <Input
+                  id="group-name"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="Enter group name"
+                />
+              </div>
+            </>
+          )}
 
-          {/* Search Bar */}
           <div className="space-y-2">
-            <Label>Add Members</Label>
+            <Label>{isInviteMode ? "Select Members" : "Add Members"}</Label>
             <Input
               placeholder="Search friends..."
               value={searchQuery}
@@ -127,7 +159,6 @@ export function CreateGroupDialog({
             />
           </div>
 
-          {/* Friends List */}
           <div className="max-h-[200px] overflow-y-auto border rounded-md">
             {filteredFriends.map((friend) => (
               <div
@@ -158,13 +189,21 @@ export function CreateGroupDialog({
 
         <DialogFooter>
           <Button
-            onClick={handleCreate}
+            onClick={handleSubmit}
             className="w-full"
             disabled={
-              isPending || !groupName.trim() || selectedFriends.size === 0
+              isPending ||
+              selectedFriends.size === 0 ||
+              (!isInviteMode && !groupName.trim())
             }
           >
-            {isPending ? "Creating..." : "Create"}
+            {isPending
+              ? isInviteMode
+                ? "Adding..."
+                : "Creating..."
+              : isInviteMode
+              ? "Add Members"
+              : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

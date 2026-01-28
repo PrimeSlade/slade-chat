@@ -1,10 +1,8 @@
 "use client";
 import { useState } from "react";
-import { useFriendsStatus, useUserLastSeen } from "@/hooks/use-friends";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { StatusBadge } from "../ui/status-badge";
-import { formatlastSeen, getInitials } from "@/lib/utils";
-import { Ellipsis, Users, Trash2, Info } from "lucide-react";
+import { getInitials } from "@/lib/utils";
+import { Ellipsis, Info, LogOut, Trash2, UserPlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,18 +11,22 @@ import {
 } from "../ui/dropdown-menu";
 import { GroupMembersDialog } from "./group-members-dialog";
 
-interface ChatHeaderProps {
-  userId?: string | null;
+interface ChatHeaderGroupProps {
+  roomId: string;
   name: string;
   image: string;
+  totalMembers: number;
+  onlineMembers: number;
 }
 
-export default function ChatHeader({ userId, name, image }: ChatHeaderProps) {
-  const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
-  const { data: userLastSeen } = useUserLastSeen(userId!);
-  const { data: userStatuses } = useFriendsStatus();
-
-  const userStatus = userStatuses?.data.find((user) => userId === user.userId);
+export default function ChatHeaderGroup({
+  roomId,
+  name,
+  image,
+  totalMembers,
+  onlineMembers,
+}: ChatHeaderGroupProps) {
+  const [isAddMembersOpen, setIsAddMembersOpen] = useState(false);
 
   return (
     <div className="flex p-4 justify-between">
@@ -34,15 +36,13 @@ export default function ChatHeader({ userId, name, image }: ChatHeaderProps) {
             <AvatarImage src={image} />
             <AvatarFallback>{getInitials(name)}</AvatarFallback>
           </Avatar>
-          {userStatus?.status === "online" && <StatusBadge size="md" />}
         </div>
         <div>
           <h1 className="font-semibold">{name}</h1>
-          {userLastSeen?.data && (
-            <div className="text-xs text-muted-foreground/70">
-              Last seen {formatlastSeen(userLastSeen.data)}
-            </div>
-          )}
+          <div className="text-xs text-muted-foreground/70">
+            {totalMembers} members
+            {onlineMembers > 0 && `, ${onlineMembers} online`}
+          </div>
         </div>
       </div>
       <DropdownMenu>
@@ -58,22 +58,27 @@ export default function ChatHeader({ userId, name, image }: ChatHeaderProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             className="group"
-            onClick={() => setIsCreateGroupOpen(true)}
+            onClick={() => setIsAddMembersOpen(true)}
           >
-            <Users className="mr-2 h-4 w-4 group-hover:animate-[shake_0.5s_ease-in-out]" />
-            <span>Create group</span>
+            <UserPlus className="mr-2 h-4 w-4 group-hover:animate-[shake_0.5s_ease-in-out]" />
+            <span>Add members</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="group">
+            <LogOut className="mr-2 h-4 w-4 group-hover:animate-[shake_0.5s_ease-in-out]" />
+            <span>Leave chat</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="group">
             <Trash2 className="mr-2 h-4 w-4 group-hover:animate-[shake_0.5s_ease-in-out] text-destructive" />
-            <span className="text-destructive">Delete chat</span>
+            <span className="text-destructive">Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <GroupMembersDialog
-        open={isCreateGroupOpen}
-        onOpenChange={setIsCreateGroupOpen}
-        otherUserName={name}
+        open={isAddMembersOpen}
+        onOpenChange={setIsAddMembersOpen}
+        roomId={roomId}
+        isInviteMode={true}
       />
     </div>
   );
