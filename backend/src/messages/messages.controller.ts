@@ -24,10 +24,10 @@ import {
 } from '../shared';
 import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
 import { Session, UserSession } from '@thallesp/nestjs-better-auth';
-import { RoomGuard } from './guards/room.guard';
 import { ControllerResponse } from 'src/common/types/responce.type';
+import { HttpRoomGuard } from 'src/common/guards/http-room.guard';
 
-@UseGuards(RoomGuard)
+@UseGuards(HttpRoomGuard)
 @Controller('messages')
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}

@@ -12,7 +12,7 @@ import {
 } from '@nestjs/websockets';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { Server, Socket } from 'socket.io';
-import { RoomGuard } from './guards/rooms.guard';
+import { WsRoomGuard } from '../common/guards/ws-rooms.guard';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { OnEvent } from '@nestjs/event-emitter';
 import { MessageWithSender, RoomParticipantWithRoomByUserId } from 'src/shared';
@@ -119,7 +119,7 @@ export class ChatGateway
     }
   }
 
-  @UseGuards(RoomGuard)
+  @UseGuards(WsRoomGuard)
   @SubscribeMessage('join_room')
   handleJoinRoom(
     @MessageBody() data: { roomId: string },

@@ -7,7 +7,7 @@ import {
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
-export class RoomGuard implements CanActivate {
+export class HttpRoomGuard implements CanActivate {
   constructor(private readonly prismaService: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
