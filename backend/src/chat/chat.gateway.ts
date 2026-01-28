@@ -15,7 +15,9 @@ import { Server, Socket } from 'socket.io';
 import { WsRoomGuard } from '../common/guards/ws-rooms.guard';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { OnEvent } from '@nestjs/event-emitter';
-import { MessageWithSender, RoomParticipantWithRoomByUserId } from 'src/shared';
+import { MessageWithSender } from 'src/shared';
+import { UsersService } from 'src/users/users.service';
+import { extractFriendIds } from 'src/common/helpers/friendship.helper';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -33,6 +35,7 @@ export class ChatGateway
 
   constructor(
     private configService: ConfigService,
+    private readonly usersService: UsersService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.baseUrl = this.configService.get<string>('BASE_URL')!;
@@ -74,6 +77,10 @@ export class ChatGateway
     // Join a room with the user's ID for targeted notifications
     client.join(userId);
 
+    const friends = await this.usersService.findFriends(userId);
+
+    const friendIds = extractFriendIds(friends, userId);
+
     //checking status
     const currentCount =
       (await this.cacheManager.get<number>(`user:${userId}:count`)) || 0;
@@ -85,7 +92,7 @@ export class ChatGateway
     await this.cacheManager.set(`user:${userId}:count`, newCount);
 
     if (newCount === 1) {
-      this.server.emit('user_status', {
+      this.server.to(friendIds).emit('user_status', {
         userId: userId,
         status: 'online',
       });
@@ -100,6 +107,10 @@ export class ChatGateway
     // Leave the user's room
     client.leave(userId);
 
+    const friends = await this.usersService.findFriends(userId);
+
+    const friendIds = extractFriendIds(friends, userId);
+
     const currentCount =
       (await this.cacheManager.get<number>(`user:${userId}:count`)) || 0;
 
@@ -112,7 +123,7 @@ export class ChatGateway
     if (newCount === 0) {
       await this.cacheManager.set(`user:${userId}:last_seen`, new Date());
 
-      this.server.emit('user_status', {
+      this.server.to(friendIds).emit('user_status', {
         userId: userId,
         status: 'offline',
       });

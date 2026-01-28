@@ -15,6 +15,7 @@ import {
 import { UsersRepository } from './users.repository';
 import { FriendStatus } from 'generated/prisma/enums';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { extractFriendIds } from 'src/common/helpers/friendship.helper';
 
 @Injectable()
 export class UsersService {
@@ -35,9 +36,7 @@ export class UsersService {
   async findUserStatus(myId: string): Promise<UserStatus[]> {
     const friends = await this.usersRepository.findFriends(myId);
 
-    const friendIds = friends.map((relation) =>
-      relation.senderId === myId ? relation.receiverId : relation.senderId,
-    );
+    const friendIds = extractFriendIds(friends, myId);
 
     const countKeys = friendIds.map((id) => `user:${id}:count`);
 
