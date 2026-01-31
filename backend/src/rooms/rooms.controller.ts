@@ -20,7 +20,7 @@ import {
   createDirectRoomSchema,
   CreateGroupRoomDto,
   createGroupRoomSchema,
-  RoomWithActiveMembers,
+  RoomWithParticipantStatus,
 } from 'src/shared';
 import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
 import { ControllerResponse } from 'src/common/types/responce.type';
@@ -66,7 +66,7 @@ export class RoomsController {
   async getMyRoomByRoomId(
     @Param('roomId') roomId: string,
     @Session() session: UserSession,
-  ): Promise<ControllerResponse<RoomWithActiveMembers>> {
+  ): Promise<ControllerResponse<RoomWithParticipantStatus>> {
     const room = await this.roomsService.getMyRoomByRoomId(
       session.user.id,
       roomId,

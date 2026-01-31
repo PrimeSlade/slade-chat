@@ -79,8 +79,20 @@ export type RoomParticipantWithRoomByRoomId = Prisma.RoomParticipantGetPayload<{
   };
 }>;
 
-export type RoomWithActiveMembers = RoomParticipantWithRoomByRoomId & {
-  activeMembers: number;
+type BaseParticipant =
+  RoomParticipantWithRoomByRoomId['room']['participants'][number];
+
+export type RoomWithParticipantStatus = Omit<
+  RoomParticipantWithRoomByRoomId,
+  'room'
+> & {
+  room: Omit<RoomParticipantWithRoomByRoomId['room'], 'participants'> & {
+    participants: (Omit<BaseParticipant, 'user'> & {
+      user: BaseParticipant['user'] & {
+        status: 'online' | 'offline';
+      };
+    })[];
+  };
 };
 
 export type RoomIdsByUserId = Prisma.RoomParticipantGetPayload<{

@@ -63,9 +63,6 @@ export class RoomsReposiory {
         room: {
           include: {
             participants: {
-              where: {
-                userId: { not: myId },
-              },
               include: {
                 user: {
                   select: { id: true, name: true, image: true },

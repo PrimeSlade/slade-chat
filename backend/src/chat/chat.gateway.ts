@@ -104,7 +104,10 @@ export class ChatGateway
       });
 
       if (roomIds.length > 0) {
-        this.server.to(roomIds).emit('user_status_room_inc');
+        this.server.to(roomIds).emit('user_status_room_inc', {
+          userId: userId,
+          status: 'online',
+        });
       }
     }
   }
@@ -143,7 +146,10 @@ export class ChatGateway
       });
 
       if (roomIds.length > 0) {
-        this.server.to(roomIds).emit('user_status_room_dec');
+        this.server.to(roomIds).emit('user_status_room_dec', {
+          userId: userId,
+          status: 'offline',
+        });
       }
     }
   }

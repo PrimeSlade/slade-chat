@@ -7,8 +7,8 @@ import {
   CreateDirectRoomDto,
   RoomParticipantWithRoomByRoomId,
   CreateGroupRoomDto,
-  RoomWithActiveMembers,
   RoomIdsByUserId,
+  RoomWithParticipantStatus,
 } from 'src/shared';
 import { MessagesRepository } from 'src/messages/messages.repository';
 import { PrismaService } from 'src/prisma.service';
@@ -85,19 +85,38 @@ export class RoomsService {
   async getMyRoomByRoomId(
     myId: string,
     roomId: string,
-  ): Promise<RoomWithActiveMembers> {
+  ): Promise<RoomWithParticipantStatus> {
     const data = await this.roomsRepository.findMyRoombyRoomId(myId, roomId);
 
     const memberIds = data.room.participants.map(
       (participant) => `user:${participant.userId}:count`,
     );
 
-    const counts = (await this.cacheManager.mget(memberIds)).reduce(
-      (acc: number, id: number) => (id >= 1 ? acc + 1 : acc),
-      1,
-    ) as number;
+    const counts = await this.cacheManager.mget(memberIds);
 
-    return { ...data, activeMembers: counts };
+    const participantsWithStatus = data.room.participants.map(
+      (participant, i) => {
+        const count = (counts[i] as number) ?? 0;
+
+        const status: 'online' | 'offline' = count >= 1 ? 'online' : 'offline';
+
+        return {
+          ...participant,
+          user: {
+            ...participant.user,
+            status,
+          },
+        };
+      },
+    );
+
+    return {
+      ...data,
+      room: {
+        ...data.room,
+        participants: participantsWithStatus,
+      },
+    };
   }
 
   async getRoomByUserId(
