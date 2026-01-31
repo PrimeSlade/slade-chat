@@ -78,3 +78,13 @@ export type RoomParticipantWithRoomByRoomId = Prisma.RoomParticipantGetPayload<{
     };
   };
 }>;
+
+export type RoomWithActiveMembers = RoomParticipantWithRoomByRoomId & {
+  activeMembers: number;
+};
+
+export type RoomIdsByUserId = Prisma.RoomParticipantGetPayload<{
+  select: {
+    roomId: true;
+  };
+}>;

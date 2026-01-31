@@ -18,6 +18,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { MessageWithSender } from 'src/shared';
 import { UsersService } from 'src/users/users.service';
 import { extractFriendIds } from 'src/common/helpers/friendship.helper';
+import { RoomsService } from 'src/rooms/rooms.service';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -36,6 +37,7 @@ export class ChatGateway
   constructor(
     private configService: ConfigService,
     private readonly usersService: UsersService,
+    private readonly roomsService: RoomsService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.baseUrl = this.configService.get<string>('BASE_URL')!;
@@ -77,10 +79,6 @@ export class ChatGateway
     // Join a room with the user's ID for targeted notifications
     client.join(userId);
 
-    const friends = await this.usersService.findFriends(userId);
-
-    const friendIds = extractFriendIds(friends, userId);
-
     //checking status
     const currentCount =
       (await this.cacheManager.get<number>(`user:${userId}:count`)) || 0;
@@ -92,10 +90,22 @@ export class ChatGateway
     await this.cacheManager.set(`user:${userId}:count`, newCount);
 
     if (newCount === 1) {
+      const [friends, roomIdsData] = await Promise.all([
+        this.usersService.findFriends(userId),
+        this.roomsService.getRoomIdsByUserId(userId),
+      ]);
+
+      const friendIds = extractFriendIds(friends, userId);
+      const roomIds = roomIdsData.map((ids) => ids.roomId);
+
       this.server.to(friendIds).emit('user_status', {
         userId: userId,
         status: 'online',
       });
+
+      if (roomIds.length > 0) {
+        this.server.to(roomIds).emit('user_status_room_inc');
+      }
     }
   }
 
@@ -107,10 +117,6 @@ export class ChatGateway
     // Leave the user's room
     client.leave(userId);
 
-    const friends = await this.usersService.findFriends(userId);
-
-    const friendIds = extractFriendIds(friends, userId);
-
     const currentCount =
       (await this.cacheManager.get<number>(`user:${userId}:count`)) || 0;
 
@@ -121,12 +127,24 @@ export class ChatGateway
     await this.cacheManager.set(`user:${userId}:count`, newCount);
 
     if (newCount === 0) {
+      const [friends, roomIdsData] = await Promise.all([
+        this.usersService.findFriends(userId),
+        this.roomsService.getRoomIdsByUserId(userId),
+      ]);
+
+      const friendIds = extractFriendIds(friends, userId);
+      const roomIds = roomIdsData.map((ids) => ids.roomId);
+
       await this.cacheManager.set(`user:${userId}:last_seen`, new Date());
 
       this.server.to(friendIds).emit('user_status', {
         userId: userId,
         status: 'offline',
       });
+
+      if (roomIds.length > 0) {
+        this.server.to(roomIds).emit('user_status_room_dec');
+      }
     }
   }
 

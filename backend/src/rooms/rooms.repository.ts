@@ -9,6 +9,7 @@ import {
   Room,
   RoomParticipantWithRoomByRoomId,
   CreateGroupRoomDto,
+  RoomIdsByUserId,
 } from 'src/shared';
 
 @Injectable()
@@ -117,6 +118,17 @@ export class RoomsReposiory {
             },
           },
         },
+      },
+    });
+  }
+
+  async findRoomIdsByUserId(userId: string): Promise<RoomIdsByUserId[]> {
+    return this.prismaService.roomParticipant.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        roomId: true,
       },
     });
   }

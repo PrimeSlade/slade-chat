@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Inject } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -9,10 +9,11 @@ import { auth } from './lib/auth';
 import { ChatModule } from './chat/chat.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { MessagesModule } from './messages/messages.module';
-import { CacheModule } from '@nestjs/cache-manager';
+import { CacheModule, CACHE_MANAGER } from '@nestjs/cache-manager';
 import KeyvRedis, { Keyv } from '@keyv/redis';
 import { CacheableMemory } from 'cacheable';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { Cache } from 'cache-manager';
 
 @Module({
   imports: [
@@ -60,4 +61,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+
+  async onModuleInit() {
+    await this.cacheManager.clear();
+    console.log('Cache cleared on module initialization');
+  }
+}

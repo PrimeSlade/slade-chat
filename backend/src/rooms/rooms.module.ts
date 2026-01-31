@@ -8,6 +8,6 @@ import { MessagesModule } from 'src/messages/messages.module';
   imports: [MessagesModule],
   controllers: [RoomsController],
   providers: [RoomsService, RoomsReposiory],
-  exports: [RoomsReposiory],
+  exports: [RoomsService],
 })
 export class RoomsModule {}

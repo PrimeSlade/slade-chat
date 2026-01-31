@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { RoomsReposiory } from './rooms.repository';
 import {
   RoomParticipantWithRoom,
@@ -7,10 +7,13 @@ import {
   CreateDirectRoomDto,
   RoomParticipantWithRoomByRoomId,
   CreateGroupRoomDto,
+  RoomWithActiveMembers,
+  RoomIdsByUserId,
 } from 'src/shared';
 import { MessagesRepository } from 'src/messages/messages.repository';
 import { PrismaService } from 'src/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class RoomsService {
@@ -19,6 +22,7 @@ export class RoomsService {
     private readonly roomsRepository: RoomsReposiory,
     private readonly messagesRepositroy: MessagesRepository,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async createDirectRoom(
@@ -81,8 +85,19 @@ export class RoomsService {
   async getMyRoomByRoomId(
     myId: string,
     roomId: string,
-  ): Promise<RoomParticipantWithRoomByRoomId> {
-    return this.roomsRepository.findMyRoombyRoomId(myId, roomId);
+  ): Promise<RoomWithActiveMembers> {
+    const data = await this.roomsRepository.findMyRoombyRoomId(myId, roomId);
+
+    const memberIds = data.room.participants.map(
+      (participant) => `user:${participant.userId}:count`,
+    );
+
+    const counts = (await this.cacheManager.mget(memberIds)).reduce(
+      (acc: number, id: number) => (id >= 1 ? acc + 1 : acc),
+      1,
+    ) as number;
+
+    return { ...data, activeMembers: counts };
   }
 
   async getRoomByUserId(
@@ -90,6 +105,10 @@ export class RoomsService {
     userId: string,
   ): Promise<RoomParticipantWithRoomByUserId | null> {
     return this.roomsRepository.findRoomByUserId(myId, userId);
+  }
+
+  async getRoomIdsByUserId(userId: string): Promise<RoomIdsByUserId[]> {
+    return this.roomsRepository.findRoomIdsByUserId(userId);
   }
 
   async createGroupRoom(data: CreateGroupRoomDto, myId: string): Promise<Room> {
