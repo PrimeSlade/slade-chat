@@ -100,3 +100,9 @@ export type RoomIdsByUserId = Prisma.RoomParticipantGetPayload<{
     roomId: true;
   };
 }>;
+
+export type RoomParticipantsByRoomId = Prisma.RoomParticipantGetPayload<{
+  select: {
+    userId: true;
+  };
+}>;

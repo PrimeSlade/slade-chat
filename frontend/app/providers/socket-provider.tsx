@@ -14,13 +14,24 @@ export default function SocketProvider({ children }: { children: ReactNode }) {
         token: data.token,
       };
 
-      socket.connect();
+      if (!socket.connected) {
+        socket.connect();
+      }
     };
 
     connectSocket();
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && !socket.connected) {
+        connectSocket();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
-      socket.disconnect();
+      // socket.disconnect(); //Optional
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 

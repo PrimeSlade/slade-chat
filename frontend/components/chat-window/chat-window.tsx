@@ -15,6 +15,7 @@ import axios from "axios";
 import { MessageSkeletonLoader } from "./message-skeleton-loader";
 import { ChatHeaderSkeleton } from "../chat-list/chat-skeletons";
 import ChatHeaderGroup from "./chat-header-group";
+import { useSession } from "@/lib/auth-client";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -37,6 +38,8 @@ export function ChatWindow({
   const { data: ghostUser, isLoading: isLoadingGhostUser } = useUserById(
     userId!
   );
+
+  const { data: session } = useSession();
 
   const {
     data: roomData,
@@ -81,6 +84,10 @@ export function ChatWindow({
     console.log("Socket ID:", socket.id);
 
     const handleNewMessage = (message: ResponseFormat<MessageWithSender>) => {
+      if (message.data.senderId !== session?.user.id) {
+        queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      }
+
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         if (!oldData) return oldData;
 

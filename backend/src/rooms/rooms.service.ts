@@ -9,6 +9,7 @@ import {
   CreateGroupRoomDto,
   RoomIdsByUserId,
   RoomWithParticipantStatus,
+  RoomParticipantsByRoomId,
 } from 'src/shared';
 import { MessagesRepository } from 'src/messages/messages.repository';
 import { PrismaService } from 'src/prisma.service';
@@ -128,6 +129,13 @@ export class RoomsService {
 
   async getRoomIdsByUserId(userId: string): Promise<RoomIdsByUserId[]> {
     return this.roomsRepository.findRoomIdsByUserId(userId);
+  }
+
+  async getRoomParticipantsByRoomId(
+    roomId: string,
+    myId: string,
+  ): Promise<RoomParticipantsByRoomId[]> {
+    return this.roomsRepository.findRoomParticipantsByRoomId(roomId, myId);
   }
 
   async createGroupRoom(data: CreateGroupRoomDto, myId: string): Promise<Room> {

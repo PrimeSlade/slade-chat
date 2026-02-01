@@ -182,8 +182,17 @@ export class ChatGateway
   }
 
   @OnEvent('message_created')
-  handleMessageCreatedEvent(roomId: string, payload: MessageWithSender) {
-    this.server.to(roomId).emit('new_message', { data: payload });
+  async handleMessageCreatedEvent(roomId: string, payload: MessageWithSender) {
+    const data = await this.roomsService.getRoomParticipantsByRoomId(
+      roomId,
+      payload.senderId,
+    );
+
+    const memberids = data.map((user) => user.userId);
+
+    this.server
+      .to([...memberids, payload.senderId])
+      .emit('new_message', { data: payload });
   }
 
   @OnEvent('room_created')

@@ -66,17 +66,17 @@ export default function ChatInput({
   const lastTypingTime = useRef<number>(0);
 
   useEffect(() => {
-    if (!messageValue) return;
+    if (!messageValue || !roomId || !session?.user.id) return;
 
     const now = Date.now();
 
     if (now - lastTypingTime.current > 2000) {
-      socket.emit("user_typing", { roomId, userId: session?.user.id });
+      socket.emit("user_typing", { roomId, userId: session.user.id });
 
       // Update the timestamp
       lastTypingTime.current = now;
     }
-  }, [messageValue, roomId, session, socket]);
+  }, [messageValue, roomId, session?.user.id]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     if (isExceeded || !data.message.trim()) return;
