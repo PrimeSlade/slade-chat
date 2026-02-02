@@ -6,7 +6,7 @@ import ChatInput from "./chat-input";
 import { MessageList } from "../message/message-list";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { socket } from "@/lib/socket";
-import { getInitials, getRoomDisplay } from "@/lib/utils";
+import { addToFirstPage, getInitials, getRoomDisplay } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageWithSender, ResponseFormat } from "@backend/shared";
@@ -91,16 +91,18 @@ export function ChatWindow({
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         if (!oldData) return oldData;
 
-        return {
-          ...oldData,
-          pages: [
-            {
-              ...oldData.pages[0],
-              data: [...oldData.pages[0].data, message.data],
-            },
-            ...oldData.pages.slice(1), //restoring old pages
-          ],
-        };
+        // return {
+        //   ...oldData,
+        //   pages: [
+        //     {
+        //       ...oldData.pages[0],
+        //       data: [...oldData.pages[0].data, message.data],
+        //     },
+        //     ...oldData.pages.slice(1), //restoring old pages
+        //   ],
+        // };
+
+        return addToFirstPage(oldData, message.data);
       });
 
       //Immediately remove this user from the typing list if new message arrives before it is expired
@@ -148,6 +150,8 @@ export function ChatWindow({
       participant.user.status === "online" ? acc + 1 : acc,
     0
   );
+
+  console.log(messagesData);
 
   // Show unified loading state
   if (isLoading) {

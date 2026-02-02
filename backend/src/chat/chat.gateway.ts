@@ -190,9 +190,7 @@ export class ChatGateway
 
     const memberids = data.map((user) => user.userId);
 
-    this.server
-      .to([...memberids, payload.senderId])
-      .emit('new_message', { data: payload });
+    this.server.to(memberids).emit('new_message', { data: payload });
   }
 
   @OnEvent('room_created')

@@ -8,7 +8,7 @@ import { formatDateLabelForChatWindow } from "@/lib/utils";
 import { TypingIndicator } from "../chat-window/typing-indicator";
 
 interface MessageListProps {
-  messages: MessageWithSender[];
+  messages: (MessageWithSender & { isPending?: boolean })[];
   fetchNextPage: () => void;
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
@@ -100,7 +100,7 @@ export function MessageList({
         const showDate = currentDateLabel !== previousDateLabel;
 
         return (
-          <>
+          <div key={index}>
             {showDate && (
               <div className="flex justify-center my-4">
                 <span className="text-xs text-muted-foreground px-2 py-1 rounded-full">
@@ -117,7 +117,7 @@ export function MessageList({
               senderAvatar={msg.sender.image!}
               showAvatar={!isMine}
             />
-          </>
+          </div>
         );
       })}
 

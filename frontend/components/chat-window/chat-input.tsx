@@ -13,6 +13,7 @@ import { createMessage } from "@/lib/api/messages";
 import { useEffect, useRef, useState } from "react";
 import { socket } from "@/lib/socket";
 import { useSession } from "@/lib/auth-client";
+import { addToFirstPage, updateFirstPage } from "@/lib/utils";
 
 interface ChatInputProps {
   isGhostMode?: boolean;
@@ -36,6 +37,8 @@ export default function ChatInput({
 
   const { data: session, isPending, error } = useSession();
 
+  if (isPending) return;
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: { message: "" },
@@ -51,10 +54,51 @@ export default function ChatInput({
 
   const { mutate: createMessageMutate } = useMutation({
     mutationFn: createMessage,
-    onSuccess: () => {
+    onMutate: async (newMessage) => {
+      console.log(newMessage);
+
+      await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
+
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`,
+        content: newMessage.content,
+        createdAt: new Date().toISOString(),
+        roomId: roomId,
+        senderId: session!.user.id,
+        sender: session!.user,
+        isPending: true,
+      };
+
+      queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
+        if (!oldData) return oldData;
+        return addToFirstPage(oldData, optimisticMessage);
+      });
+
+      return { optimisticMessage };
+    },
+    onSuccess: (savedMessage, newContent, context) => {
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
-      // queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
+
+      queryClient.setQueriesData(
+        { queryKey: ["messages", roomId] },
+        (oldData: any) => {
+          if (!oldData || !oldData.pages) return oldData;
+
+          const updatedFirstPageData = oldData.pages[0].data.map((msg: any) => {
+            if (msg.id === context?.optimisticMessage.id) {
+              return savedMessage!.data;
+            }
+            return msg;
+          });
+
+          return updateFirstPage(oldData, updatedFirstPageData);
+        }
+      );
+
       form.reset();
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
     },
   });
 
