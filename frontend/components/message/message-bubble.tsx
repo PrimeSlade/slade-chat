@@ -1,6 +1,7 @@
 import { cn, getInitials } from "@/lib/utils"; // shadcn helper for classes
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday } from "date-fns";
+import { Check, CheckCheck } from "lucide-react";
 
 interface MessageBubbleProps {
   content: string;
@@ -9,6 +10,7 @@ interface MessageBubbleProps {
   senderName?: string;
   senderAvatar?: string;
   showAvatar?: boolean;
+  isPending?: boolean;
 }
 
 export default function MessageBubble({
@@ -18,6 +20,7 @@ export default function MessageBubble({
   senderName,
   senderAvatar,
   showAvatar = true,
+  isPending = false,
 }: MessageBubbleProps) {
   return (
     <div
@@ -53,13 +56,26 @@ export default function MessageBubble({
         {isToday(new Date(createdAt)) && (
           <span
             className={cn(
-              "text-[10px] mt-1 flex",
+              "text-[10px] mt-1 flex items-center gap-1",
               isMine
                 ? "text-blue-100 justify-end"
                 : "text-gray-400 justify-start"
             )}
           >
             {format(new Date(createdAt), "HH:mm")}
+            {isMine && (
+              <span className="inline-flex -space-x-1">
+                {isPending ? (
+                  // Single tick for pending
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                ) : (
+                  // Double tick for sent
+                  <>
+                    <CheckCheck className="w-3.5 h-3.5" strokeWidth={2.5} />
+                  </>
+                )}
+              </span>
+            )}
           </span>
         )}
       </div>

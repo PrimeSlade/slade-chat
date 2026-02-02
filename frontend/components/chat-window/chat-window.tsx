@@ -91,17 +91,6 @@ export function ChatWindow({
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         if (!oldData) return oldData;
 
-        // return {
-        //   ...oldData,
-        //   pages: [
-        //     {
-        //       ...oldData.pages[0],
-        //       data: [...oldData.pages[0].data, message.data],
-        //     },
-        //     ...oldData.pages.slice(1), //restoring old pages
-        //   ],
-        // };
-
         return addToFirstPage(oldData, message.data);
       });
 

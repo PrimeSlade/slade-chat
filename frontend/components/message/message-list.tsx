@@ -116,6 +116,7 @@ export function MessageList({
               senderName={msg.sender.name}
               senderAvatar={msg.sender.image!}
               showAvatar={!isMine}
+              isPending={msg.isPending}
             />
           </div>
         );
