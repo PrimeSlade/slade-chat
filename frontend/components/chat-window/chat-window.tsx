@@ -16,6 +16,7 @@ import { MessageSkeletonLoader } from "./message-skeleton-loader";
 import { ChatHeaderSkeleton } from "../chat-list/chat-skeletons";
 import ChatHeaderGroup from "./chat-header-group";
 import { useSession } from "@/lib/auth-client";
+import { useMarkAsSeen } from "@/hooks/use-mark-as-seen";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -79,6 +80,9 @@ export function ChatWindow({
         .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt)) ?? []
     );
   }, [messagesData]);
+
+  // Mark messages as seen
+  useMarkAsSeen(roomId!, messages);
 
   useEffect(() => {
     console.log("Socket connected:", socket.connected);
