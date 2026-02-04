@@ -1,6 +1,6 @@
 "use client";
 import { useFriendsStatus } from "@/hooks/use-friends";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/hooks/use-socket";
 import { ResponseFormat, UserStatus } from "@backend/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { ReactNode, useEffect } from "react";
@@ -11,6 +11,7 @@ export default function UserStatusProvider({
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
+  const socket = useSocket();
 
   useEffect(() => {
     const handleStatus = (payload: UserStatus) => {

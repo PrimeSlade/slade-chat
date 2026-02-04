@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createMessage } from "@/lib/api/messages";
 import { useEffect, useRef, useState } from "react";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/hooks/use-socket";
 import { useSession } from "@/lib/auth-client";
 import { addToFirstPage, updateFirstPage } from "@/lib/utils";
 
@@ -34,6 +34,7 @@ export default function ChatInput({
 }: ChatInputProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const socket = useSocket();
 
   const { data: session, isPending, error } = useSession();
 

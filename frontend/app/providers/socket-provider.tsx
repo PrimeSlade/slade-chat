@@ -1,21 +1,27 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { socket } from "@/lib/socket";
 import { authClient } from "@/lib/auth-client";
+import { SocketContext } from "@/contexts/socket-context";
 
+//TODO: handle loading state later if anything happens related to websocket / handle re connecting once we have deployed
 export default function SocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const connectSocket = async () => {
-      const { data } = await authClient.token();
-      if (!data?.token) return;
+      try {
+        const { data } = await authClient.token();
+        if (!data?.token) return;
 
-      socket.auth = {
-        token: data.token,
-      };
+        socket.auth = {
+          token: data.token,
+        };
 
-      if (!socket.connected) {
-        socket.connect();
+        if (!socket.connected) {
+          socket.connect();
+        }
+      } catch (error) {
+        console.error("Failed to connect socket:", error);
       }
     };
 
@@ -35,5 +41,7 @@ export default function SocketProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  return <>{children}</>;
+  return (
+    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
+  );
 }

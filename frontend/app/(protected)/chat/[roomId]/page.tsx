@@ -1,6 +1,6 @@
 "use client";
 import { ChatWindow } from "@/components/chat-window/chat-window";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/hooks/use-socket";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import {
 export default function ChatPage() {
   const { roomId } = useParams();
   const queryClient = useQueryClient();
+  const socket = useSocket();
 
   useEffect(() => {
     console.log("📍 Joining room:", roomId);

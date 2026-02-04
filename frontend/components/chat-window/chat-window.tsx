@@ -5,7 +5,7 @@ import { useMyRoomByRoomId } from "@/hooks/use-rooms";
 import ChatInput from "./chat-input";
 import { MessageList } from "../message/message-list";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/hooks/use-socket";
 import { addToFirstPage, getInitials, getRoomDisplay } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,6 +30,7 @@ export function ChatWindow({
 }: ChatWindowProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const socket = useSocket();
 
   const [isTypingUsers, setIsTypingUsers] = useState<Set<string>>(new Set());
 
@@ -139,8 +140,6 @@ export function ChatWindow({
       participant.user.status === "online" ? acc + 1 : acc,
     0
   );
-
-  console.log(messagesData);
 
   // Show unified loading state
   if (isLoading) {
