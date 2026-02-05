@@ -55,4 +55,12 @@ export class MessagesRepository {
       },
     });
   }
+
+  async getMessageByMessageId(messageId: string): Promise<Message | null> {
+    return this.prismaService.message.findUnique({
+      where: {
+        id: messageId,
+      },
+    });
+  }
 }

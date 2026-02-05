@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MessagesRepository } from './messages.repository';
-import { GetMessagesDto, MessageWithSender } from 'src/shared';
+import { GetMessagesDto, Message, MessageWithSender } from 'src/shared';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -27,5 +27,9 @@ export class MessagesService {
     this.eventEmitter.emit('message_created', message.roomId, message);
 
     return message;
+  }
+
+  async getMessageByMessageId(messageId: string): Promise<Message | null> {
+    return this.messagesRepository.getMessageByMessageId(messageId);
   }
 }

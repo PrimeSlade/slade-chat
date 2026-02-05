@@ -8,6 +8,6 @@ import { CommonModule } from 'src/common/common.module';
   imports: [CommonModule],
   controllers: [MessagesController],
   providers: [MessagesService, MessagesRepository],
-  exports: [MessagesRepository],
+  exports: [MessagesService, MessagesRepository],
 })
 export class MessagesModule {}
