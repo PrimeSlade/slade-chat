@@ -19,6 +19,7 @@ import { MessageWithSender } from 'src/shared';
 import { UsersService } from 'src/users/users.service';
 import { extractFriendIds } from 'src/common/helpers/friendship.helper';
 import { RoomsService } from 'src/rooms/rooms.service';
+import { MessagesService } from 'src/messages/messages.service';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -38,6 +39,7 @@ export class ChatGateway
     private configService: ConfigService,
     private readonly usersService: UsersService,
     private readonly roomsService: RoomsService,
+    private readonly messagesService: MessagesService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.baseUrl = this.configService.get<string>('BASE_URL')!;
@@ -179,6 +181,29 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
   ) {
     client.broadcast.to(data.roomId).emit('user_typing', data.userId);
+  }
+
+  @SubscribeMessage('mark_seen')
+  async handleMarkSeen(
+    @MessageBody() data: { roomId: string; messageId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = client.data.user.id;
+
+    const message = await this.messagesService.getMessageByMessageId(
+      data.messageId,
+    );
+
+    await this.roomsService.updateLastReadAt(
+      userId,
+      data.roomId,
+      message!.createdAt,
+    );
+
+    client.broadcast.to(data.roomId).emit('user_read_update', {
+      userId: userId,
+      lastReadAt: message?.createdAt,
+    });
   }
 
   @OnEvent('message_created')
