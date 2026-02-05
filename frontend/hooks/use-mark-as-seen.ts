@@ -1,48 +1,32 @@
-import { MessageWithSender } from "@backend/shared/index";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { useSocket } from "./use-socket";
 
 export const useMarkAsSeen = (
-  roomId: string,
-  messages: MessageWithSender[]
+  roomId?: string,
+  lastMessageId?: string | null
 ) => {
   const socket = useSocket();
-  const lastSeenIdRef = useRef<string | null>(null);
+
+  const { ref, inView } = useInView({
+    threshold: 0.5,
+    triggerOnce: true,
+  });
 
   useEffect(() => {
-    if (!messages.length || !socket || !roomId) return;
+    if (!inView || !lastMessageId || !roomId || !socket) return;
 
-    const lastMessage = messages[messages.length - 1];
+    if (lastMessageId.startsWith("temp-")) return;
 
-    // Optimization: Don't send if we already marked this specific ID as seen
-    if (lastSeenIdRef.current === lastMessage.id) return;
+    if (document.visibilityState === "visible") {
+      console.log("Marking seen:", lastMessageId);
 
-    //Define the trigger logic
-    const markSeen = () => {
-      // Check if window is actually focused (User is looking)
-      if (document.visibilityState === "visible") {
-        socket.emit("mark_seen", {
-          roomId,
-          messageId: lastMessage.id,
-        });
+      socket.emit("mark_seen", {
+        roomId,
+        messageId: lastMessageId,
+      });
+    }
+  }, [inView, lastMessageId, roomId, socket]);
 
-        lastSeenIdRef.current = lastMessage.id;
-      }
-    };
-
-    markSeen();
-
-    //Handle "On Focus" (User comes back to tab)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        markSeen();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [roomId, messages, socket]);
+  return ref;
 };
