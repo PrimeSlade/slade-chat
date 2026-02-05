@@ -106,3 +106,5 @@ export type RoomParticipantsByRoomId = Prisma.RoomParticipantGetPayload<{
     userId: true;
   };
 }>;
+
+export type { RoomParticipant } from 'generated/prisma/client';

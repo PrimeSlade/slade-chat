@@ -10,6 +10,7 @@ import {
   RoomIdsByUserId,
   RoomWithParticipantStatus,
   RoomParticipantsByRoomId,
+  RoomParticipant,
 } from 'src/shared';
 import { MessagesRepository } from 'src/messages/messages.repository';
 import { PrismaService } from 'src/prisma.service';
@@ -140,5 +141,13 @@ export class RoomsService {
 
   async createGroupRoom(data: CreateGroupRoomDto, myId: string): Promise<Room> {
     return this.roomsRepository.createGroupRoom(data, myId);
+  }
+
+  async updateLastReadAt(
+    userId: string,
+    roomId: string,
+    lastReadAt: Date,
+  ): Promise<RoomParticipant> {
+    return this.roomsRepository.updateLastReadAt(userId, roomId, lastReadAt);
   }
 }

@@ -11,6 +11,7 @@ import {
   CreateGroupRoomDto,
   RoomIdsByUserId,
   RoomParticipantsByRoomId,
+  RoomParticipant,
 } from 'src/shared';
 
 @Injectable()
@@ -174,6 +175,24 @@ export class RoomsReposiory {
             userId: id,
           })),
         },
+      },
+    });
+  }
+
+  async updateLastReadAt(
+    userId: string,
+    roomId: string,
+    lastReadAt: Date,
+  ): Promise<RoomParticipant> {
+    return this.prismaService.roomParticipant.update({
+      where: {
+        userId_roomId: {
+          userId,
+          roomId,
+        },
+      },
+      data: {
+        lastReadAt,
       },
     });
   }
