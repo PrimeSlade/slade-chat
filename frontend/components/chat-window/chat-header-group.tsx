@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { Ellipsis, Info, LogOut, Trash2, UserPlus } from "lucide-react";
@@ -10,13 +10,14 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { GroupMembersDialog } from "./group-members-dialog";
+import { RoomWithParticipantStatus } from "@backend/shared";
 
 interface ChatHeaderGroupProps {
   roomId: string;
   name: string;
   image: string;
   totalMembers: number;
-  onlineMembers: number;
+  participants: RoomWithParticipantStatus["room"]["participants"];
 }
 
 export default function ChatHeaderGroup({
@@ -24,9 +25,18 @@ export default function ChatHeaderGroup({
   name,
   image,
   totalMembers,
-  onlineMembers,
+  participants,
 }: ChatHeaderGroupProps) {
   const [isAddMembersOpen, setIsAddMembersOpen] = useState(false);
+
+  // Calculate online members from participants
+  const onlineMembers = useMemo(() => {
+    return participants.reduce(
+      (acc, participant) =>
+        participant.user.status === "online" ? acc + 1 : acc,
+      0
+    );
+  }, [participants]);
 
   return (
     <div className="flex p-4 justify-between">

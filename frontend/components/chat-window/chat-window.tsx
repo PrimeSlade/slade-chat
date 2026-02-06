@@ -9,14 +9,17 @@ import { useSocket } from "@/hooks/use-socket";
 import { addToFirstPage, getInitials, getRoomDisplay } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageWithSender, ResponseFormat } from "@backend/shared";
+import {
+  MessageWithSender,
+  ResponseFormat,
+  RoomWithParticipantStatus,
+} from "@backend/shared";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { MessageSkeletonLoader } from "./message-skeleton-loader";
 import { ChatHeaderSkeleton } from "../chat-list/chat-skeletons";
 import ChatHeaderGroup from "./chat-header-group";
 import { useSession } from "@/lib/auth-client";
-import { useMarkAsSeen } from "@/hooks/use-mark-as-seen";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -81,9 +84,6 @@ export function ChatWindow({
     );
   }, [messagesData]);
 
-  // Mark messages as seen
-  useMarkAsSeen(roomId!, messages);
-
   useEffect(() => {
     console.log("Socket connected:", socket.connected);
     console.log("Socket ID:", socket.id);
@@ -124,12 +124,38 @@ export function ChatWindow({
       }, 3000);
     };
 
+    const handleReadUpdate = (data: { userId: string; lastReadAt: string }) => {
+      queryClient.setQueryData(
+        ["room", "me", roomId],
+        (oldData: ResponseFormat<RoomWithParticipantStatus>) => {
+          if (!oldData) return oldData;
+
+          return {
+            ...oldData,
+            data: {
+              ...oldData.data,
+              room: {
+                ...oldData.data.room,
+                participants: oldData.data.room.participants.map((p) =>
+                  p.userId === data.userId
+                    ? { ...p, lastReadAt: new Date(data.lastReadAt) }
+                    : p
+                ),
+              },
+            },
+          };
+        }
+      );
+    };
+
     socket.on("new_message", handleNewMessage);
     socket.on("user_typing", handleTyping);
+    socket.on("user_read_update", handleReadUpdate);
 
     return () => {
       socket.off("new_message", handleNewMessage);
       socket.off("user_typing", handleTyping);
+      socket.off("user_read_update", handleReadUpdate);
     };
   }, [socket, roomId, queryClient]);
 
@@ -138,12 +164,6 @@ export function ChatWindow({
     (isGhostMode && isLoadingGhostUser) ||
     isFetchingRoom ||
     (!isGhostMode && !roomData);
-
-  const onlineMembers = roomData?.data.room.participants.reduce(
-    (acc, participant) =>
-      participant.user.status === "online" ? acc + 1 : acc,
-    0
-  );
 
   // Show unified loading state
   if (isLoading) {
@@ -188,7 +208,7 @@ export function ChatWindow({
             name={roomData!.data.room.name!}
             image={roomData!.data.room.image!}
             totalMembers={roomData!.data.room._count.participants ?? 0}
-            onlineMembers={onlineMembers ?? 0}
+            participants={roomData!.data.room.participants}
           />
         )}
       </div>
@@ -201,6 +221,7 @@ export function ChatWindow({
           isFetchingNextPage={isFetchingNextPage}
           isTypingUsers={isTypingUsers}
           participants={roomData?.data.room?.participants}
+          roomId={roomId}
         />
       ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
