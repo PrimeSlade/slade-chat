@@ -20,8 +20,6 @@ export default function ChatPage() {
     socket.emit("join_room", { roomId });
 
     const handleUserJoin = (payload: UserStatus) => {
-      console.log(payload);
-
       queryClient.setQueryData<ResponseFormat<RoomWithParticipantStatus>>(
         ["room", "me", roomId],
         (oldData) => {
