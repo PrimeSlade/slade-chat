@@ -2,8 +2,12 @@ import { cn, getInitials } from "@/lib/utils"; // shadcn helper for classes
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday } from "date-fns";
 import { Check, CheckCheck } from "lucide-react";
+import { MessageActionsDropdown } from "./message-actions-dropdown";
+import { RoomWithParticipantStatus } from "@backend/shared";
+import { useSession } from "@/lib/auth-client";
 
 interface MessageBubbleProps {
+  messageId: string;
   content: string;
   createdAt: Date;
   isMine: boolean;
@@ -11,9 +15,13 @@ interface MessageBubbleProps {
   senderAvatar?: string;
   showAvatar?: boolean;
   isPending?: boolean;
+  isLast?: boolean;
+  lastMessageRef?: (node: HTMLDivElement | null) => void;
+  participants?: RoomWithParticipantStatus["room"]["participants"];
 }
 
 export default function MessageBubble({
+  messageId,
   content,
   createdAt,
   isMine,
@@ -21,15 +29,51 @@ export default function MessageBubble({
   senderAvatar,
   showAvatar = true,
   isPending = false,
+  isLast = false,
+  lastMessageRef,
+  participants = [],
 }: MessageBubbleProps) {
+  const { data: session } = useSession();
+
+  const getUsersWhoSeen = () => {
+    if (!participants || !session?.user?.id) return [];
+
+    return participants.filter(
+      (participant) =>
+        participant.userId !== session.user.id &&
+        new Date(participant.lastReadAt) >= new Date(createdAt)
+    );
+  };
+
+  const isSeenByOthers = () => {
+    const seenUsers = getUsersWhoSeen();
+    return seenUsers.length > 0;
+  };
+
+  const handleReply = () => {
+    console.log("Reply to message:", messageId);
+    // TODO: Implement reply functionality
+  };
+
+  const handleEdit = () => {
+    console.log("Edit message:", messageId);
+    // TODO: Implement edit functionality
+  };
+
+  const handleDelete = () => {
+    console.log("Delete message:", messageId);
+    // TODO: Implement delete functionality
+  };
+
   return (
     <div
+      ref={isLast ? lastMessageRef : null}
       className={cn(
         "flex w-full items-end gap-2",
-        isMine ? "justify-end" : "justify-start" // 👈 ALIGNMENT LOGIC
+        isMine ? "justify-end" : "justify-start"
       )}
     >
-      {/* 1. AVATAR (Only for other people) */}
+      {/* AVATAR (Only for other people) */}
       {!isMine && (
         <div className="w-8 flex-shrink-0">
           {showAvatar ? (
@@ -43,42 +87,53 @@ export default function MessageBubble({
         </div>
       )}
 
-      {/* 2. THE BUBBLE ITSELF */}
-      <div
-        className={cn(
-          "max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm",
-          isMine
-            ? "bg-black text-white rounded-br-none " // My Style
-            : "bg-gray-100 text-gray-900 rounded-bl-none" // Their Style
-        )}
+      {/* THE BUBBLE ITSELF */}
+      <MessageActionsDropdown
+        isMine={isMine}
+        seenUsers={getUsersWhoSeen()}
+        onReply={handleReply}
+        onEdit={isMine ? handleEdit : undefined}
+        onDelete={isMine ? handleDelete : undefined}
       >
-        <p>{content}</p>
-        {isToday(new Date(createdAt)) && (
-          <span
-            className={cn(
-              "text-[10px] mt-1 flex items-center gap-1",
-              isMine
-                ? "text-blue-100 justify-end"
-                : "text-gray-400 justify-start"
-            )}
-          >
-            {format(new Date(createdAt), "HH:mm")}
-            {isMine && (
-              <span className="inline-flex -space-x-1">
-                {isPending ? (
-                  // Single tick for pending
-                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
-                ) : (
-                  // Double tick for sent
-                  <>
-                    <CheckCheck className="w-3.5 h-3.5" strokeWidth={2.5} />
-                  </>
-                )}
-              </span>
-            )}
-          </span>
-        )}
-      </div>
+        <div
+          className={cn(
+            "max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm cursor-pointer transition-all hover:shadow-md",
+            isMine
+              ? "bg-black text-white rounded-br-none " // My Style
+              : "bg-gray-100 text-gray-900 rounded-bl-none" // Their Style
+          )}
+        >
+          <p>{content}</p>
+          {
+            <span
+              className={cn(
+                "text-[10px] mt-1 flex items-center gap-1",
+                isMine
+                  ? "text-blue-100 justify-end"
+                  : "text-gray-400 justify-start"
+              )}
+            >
+              {format(new Date(createdAt), "HH:mm")}
+              {isMine && (
+                <span className="inline-flex -space-x-1">
+                  {isPending ? (
+                    <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                  ) : (
+                    // Double tick for sent, green if seen by others
+                    <CheckCheck
+                      className={cn(
+                        "w-3.5 h-3.5",
+                        isSeenByOthers() && "text-(--primary-color)"
+                      )}
+                      strokeWidth={2.5}
+                    />
+                  )}
+                </span>
+              )}
+            </span>
+          }
+        </div>
+      </MessageActionsDropdown>
     </div>
   );
 }

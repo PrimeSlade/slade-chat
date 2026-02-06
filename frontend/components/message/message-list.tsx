@@ -2,10 +2,11 @@ import { useEffect, useRef } from "react";
 import MessageBubble from "./message-bubble";
 import { useSession } from "@/lib/auth-client";
 import { useInView } from "react-intersection-observer";
-import { MessageWithSender } from "@backend/shared";
+import { MessageWithSender, RoomWithParticipantStatus } from "@backend/shared";
 import { Spinner } from "../ui/spinner";
 import { formatDateLabelForChatWindow } from "@/lib/utils";
 import { TypingIndicator } from "../chat-window/typing-indicator";
+import { useMarkAsSeen } from "@/hooks/use-mark-as-seen";
 
 interface MessageListProps {
   messages: (MessageWithSender & { isPending?: boolean })[];
@@ -13,13 +14,8 @@ interface MessageListProps {
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
   isTypingUsers?: Set<string>;
-  participants?: {
-    user: {
-      id: string;
-      name?: string | null;
-      image?: string | null;
-    };
-  }[];
+  participants?: RoomWithParticipantStatus["room"]["participants"];
+  roomId?: string;
 }
 
 export function MessageList({
@@ -29,6 +25,7 @@ export function MessageList({
   isFetchingNextPage,
   isTypingUsers,
   participants,
+  roomId,
 }: MessageListProps) {
   const { data: session } = useSession();
 
@@ -78,6 +75,10 @@ export function MessageList({
     }
   }, [messages, isTypingUsers]);
 
+  const lastMessage = messages[messages.length - 1];
+
+  const lastMessageRef = useMarkAsSeen(roomId, lastMessage?.id);
+
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto px-4 space-y-4">
       <div ref={topRef} />
@@ -99,6 +100,8 @@ export function MessageList({
 
         const showDate = currentDateLabel !== previousDateLabel;
 
+        const isLast = index === messages.length - 1;
+
         return (
           <div key={index}>
             {showDate && (
@@ -110,6 +113,7 @@ export function MessageList({
             )}
             <MessageBubble
               key={msg.id}
+              messageId={msg.id}
               content={msg.content}
               createdAt={msg.createdAt}
               isMine={isMine}
@@ -117,6 +121,9 @@ export function MessageList({
               senderAvatar={msg.sender.image!}
               showAvatar={!isMine}
               isPending={msg.isPending}
+              isLast={isLast}
+              lastMessageRef={lastMessageRef}
+              participants={participants}
             />
           </div>
         );
