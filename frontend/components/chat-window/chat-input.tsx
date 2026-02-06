@@ -56,8 +56,6 @@ export default function ChatInput({
   const { mutate: createMessageMutate } = useMutation({
     mutationFn: createMessage,
     onMutate: async (newMessage) => {
-      console.log(newMessage);
-
       await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
 
       const optimisticMessage = {
@@ -74,6 +72,8 @@ export default function ChatInput({
         if (!oldData) return oldData;
         return addToFirstPage(oldData, optimisticMessage);
       });
+
+      form.reset();
 
       return { optimisticMessage };
     },

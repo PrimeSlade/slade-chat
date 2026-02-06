@@ -19,7 +19,7 @@ export const useMarkAsSeen = (
     if (lastMessageId.startsWith("temp-")) return;
 
     if (document.visibilityState === "visible") {
-      console.log("Marking seen:", lastMessageId);
+      // console.log("Marking seen:", lastMessageId);
 
       socket.emit("mark_seen", {
         roomId,
