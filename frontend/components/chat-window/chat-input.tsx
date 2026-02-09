@@ -13,7 +13,8 @@ import { createMessage } from "@/lib/api/messages";
 import { useEffect, useRef, useState } from "react";
 import { useSocket } from "@/hooks/use-socket";
 import { useSession } from "@/lib/auth-client";
-import { addToFirstPage, updateFirstPage } from "@/lib/utils";
+import { addToFirstPage, updateFirstPage, updateRoomMessages } from "@/lib/utils";
+import { ResponseFormat, RoomParticipantWithRoom } from "@backend/shared/index";
 
 interface ChatInputProps {
   isGhostMode?: boolean;
@@ -57,6 +58,7 @@ export default function ChatInput({
     mutationFn: createMessage,
     onMutate: async (newMessage) => {
       await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
+      await queryClient.cancelQueries({ queryKey: ["rooms"] });
 
       const optimisticMessage = {
         id: `temp-${Date.now()}`,
@@ -73,13 +75,25 @@ export default function ChatInput({
         return addToFirstPage(oldData, optimisticMessage);
       });
 
+      queryClient.setQueryData(
+        ["rooms"],
+        (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
+          if (!oldData) return oldData;
+
+          return updateRoomMessages(oldData, roomId!, {
+            id: optimisticMessage.id,
+            content: optimisticMessage.content,
+            createdAt: optimisticMessage.createdAt,
+            senderId: optimisticMessage.senderId,
+          });
+        }
+      );
+
       form.reset();
 
       return { optimisticMessage };
     },
     onSuccess: (savedMessage, newContent, context) => {
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
-
       queryClient.setQueriesData(
         { queryKey: ["messages", roomId] },
         (oldData: any) => {
@@ -96,10 +110,25 @@ export default function ChatInput({
         }
       );
 
+      queryClient.setQueryData(
+        ["rooms"],
+        (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
+          if (!oldData) return oldData;
+
+          return updateRoomMessages(oldData, roomId!, {
+            id: savedMessage!.data.id,
+            content: savedMessage!.data.content,
+            createdAt: savedMessage!.data.createdAt,
+            senderId: savedMessage!.data.senderId,
+          });
+        }
+      );
+
       form.reset();
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
     },
   });
 
