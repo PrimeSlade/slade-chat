@@ -18,6 +18,7 @@ interface MessageBubbleProps {
   isLast?: boolean;
   lastMessageRef?: (node: HTMLDivElement | null) => void;
   participants?: RoomWithParticipantStatus["room"]["participants"];
+  onEditMessage?: (message: { id: string; content: string }) => void;
 }
 
 export default function MessageBubble({
@@ -32,6 +33,7 @@ export default function MessageBubble({
   isLast = false,
   lastMessageRef,
   participants = [],
+  onEditMessage,
 }: MessageBubbleProps) {
   const { data: session } = useSession();
 
@@ -56,8 +58,9 @@ export default function MessageBubble({
   };
 
   const handleEdit = () => {
-    console.log("Edit message:", messageId);
-    // TODO: Implement edit functionality
+    if (onEditMessage) {
+      onEditMessage({ id: messageId, content });
+    }
   };
 
   const handleDelete = () => {

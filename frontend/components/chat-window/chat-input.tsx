@@ -12,14 +12,21 @@ import { useRouter } from "next/navigation";
 import { createMessage } from "@/lib/api/messages";
 import { useEffect, useRef, useState } from "react";
 import { useSocket } from "@/hooks/use-socket";
+import { EditIndicator } from "../ui/edit-indicator";
 import { useSession } from "@/lib/auth-client";
-import { addToFirstPage, updateFirstPage, updateRoomMessages } from "@/lib/utils";
+import {
+  addToFirstPage,
+  updateFirstPage,
+  updateRoomMessages,
+} from "@/lib/utils";
 import { ResponseFormat, RoomParticipantWithRoom } from "@backend/shared/index";
 
 interface ChatInputProps {
   isGhostMode?: boolean;
   userId?: string;
   roomId?: string;
+  editingMessage?: { id: string; content: string } | null;
+  onCancelEdit?: () => void;
 }
 
 const FormSchema = z.object({
@@ -32,6 +39,8 @@ export default function ChatInput({
   isGhostMode,
   userId,
   roomId,
+  editingMessage,
+  onCancelEdit,
 }: ChatInputProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -138,6 +147,7 @@ export default function ChatInput({
   const remainingChars = 2000 - charCount;
 
   const lastTypingTime = useRef<number>(0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!messageValue || !roomId || !session?.user.id) return;
@@ -152,8 +162,43 @@ export default function ChatInput({
     }
   }, [messageValue, roomId, session?.user.id]);
 
+  //if I click edit
+  useEffect(() => {
+    if (editingMessage) {
+      form.setValue("message", editingMessage.content);
+      // Focus the input after setting the value
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  }, [editingMessage, form]);
+
+  const handleCancelEdit = () => {
+    if (onCancelEdit) {
+      onCancelEdit();
+    }
+    form.setValue("message", "");
+  };
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     if (isExceeded || !data.message.trim()) return;
+
+    if (editingMessage) {
+      if (data.message.trim() !== editingMessage.content.trim()) {
+        console.log(
+          "Editing message:",
+          editingMessage.id,
+          "with:",
+          data.message
+        );
+      }
+      //clear state
+      if (onCancelEdit) {
+        onCancelEdit();
+      }
+      form.reset();
+      return;
+    }
 
     if (isGhostMode && userId) {
       directRoomMutate({ content: data.message, otherId: userId });
@@ -163,8 +208,14 @@ export default function ChatInput({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="p-4">
-      <div className="flex items-center gap-2">
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      {editingMessage && (
+        <EditIndicator
+          editText={editingMessage.content}
+          onCancel={handleCancelEdit}
+        />
+      )}
+      <div className="flex items-center gap-2 p-4">
         <Button variant="ghost" size="icon" type="button">
           <Paperclip className="h-6 w-6" />
         </Button>
@@ -175,6 +226,7 @@ export default function ChatInput({
             render={({ field }) => (
               <Input
                 {...field}
+                ref={inputRef}
                 type="text"
                 placeholder="Type a message"
                 className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none pr-20"

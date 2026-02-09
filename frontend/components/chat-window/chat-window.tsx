@@ -38,6 +38,12 @@ export function ChatWindow({
 
   const [isTypingUsers, setIsTypingUsers] = useState<Set<string>>(new Set());
 
+  //for editing
+  const [editingMessage, setEditingMessage] = useState<{
+    id: string;
+    content: string;
+  } | null>(null);
+
   const timeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const { data: ghostUser, isLoading: isLoadingGhostUser } = useUserById(
@@ -225,6 +231,7 @@ export function ChatWindow({
           isTypingUsers={isTypingUsers}
           participants={roomData?.data.room?.participants}
           roomId={roomId}
+          onEditMessage={setEditingMessage}
         />
       ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -236,7 +243,13 @@ export function ChatWindow({
 
       {/* Input at bottom */}
       <div className="border-t">
-        <ChatInput isGhostMode userId={userId} roomId={roomId} />
+        <ChatInput
+          isGhostMode={isGhostMode}
+          userId={userId}
+          roomId={roomId}
+          editingMessage={editingMessage}
+          onCancelEdit={() => setEditingMessage(null)}
+        />
       </div>
     </div>
   );

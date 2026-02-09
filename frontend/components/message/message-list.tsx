@@ -16,6 +16,7 @@ interface MessageListProps {
   isTypingUsers?: Set<string>;
   participants?: RoomWithParticipantStatus["room"]["participants"];
   roomId?: string;
+  onEditMessage?: (message: { id: string; content: string }) => void;
 }
 
 export function MessageList({
@@ -26,6 +27,7 @@ export function MessageList({
   isTypingUsers,
   participants,
   roomId,
+  onEditMessage,
 }: MessageListProps) {
   const { data: session } = useSession();
 
@@ -124,6 +126,7 @@ export function MessageList({
               isLast={isLast}
               lastMessageRef={lastMessageRef}
               participants={participants}
+              onEditMessage={onEditMessage}
             />
           </div>
         );
