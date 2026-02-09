@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import {
@@ -19,6 +20,9 @@ import {
   getMessagesBodySchema,
   GetMessagesDto,
   getMessagesSchema,
+  UpdateMessageBodyDto,
+  updateMessageBodySchema,
+  UpdateMessageDto,
   Message,
   MessageWithSender,
 } from '../shared';
@@ -26,6 +30,7 @@ import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
 import { Session, UserSession } from '@thallesp/nestjs-better-auth';
 import { ControllerResponse } from 'src/common/types/responce.type';
 import { HttpRoomGuard } from 'src/common/guards/http-room.guard';
+import { MessageSenderGuard } from 'src/common/guards/message-sender.guard';
 
 @UseGuards(HttpRoomGuard)
 @Controller('messages')
@@ -65,5 +70,28 @@ export class MessagesController {
     });
 
     return { data: message, message: 'Message created sucessfully' };
+  }
+
+  @UseGuards(MessageSenderGuard)
+  @Put('room/:roomId/:messageId')
+  async updateMessage(
+    @Param('roomId') roomId: string,
+    @Param('messageId') messageId: string,
+    @Body(new ZodValidationPipe(updateMessageBodySchema))
+    body: UpdateMessageBodyDto,
+    @Session() session: UserSession,
+  ): Promise<ControllerResponse<MessageWithSender>> {
+    const updateData: UpdateMessageDto = {
+      roomId,
+      messageId,
+      ...body,
+    };
+
+    const message = await this.messagesService.updateMessage(
+      updateData,
+      session.user.id,
+    );
+
+    return { data: message, message: 'Message updated sucessfully' };
   }
 }

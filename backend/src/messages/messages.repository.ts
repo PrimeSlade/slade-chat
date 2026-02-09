@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/prisma.service';
-import { GetMessagesDto, Message, MessageWithSender } from '../shared';
+import {
+  GetMessagesDto,
+  Message,
+  MessageWithSender,
+  UpdateMessageDto,
+} from '../shared';
 
 @Injectable()
 export class MessagesRepository {
@@ -60,6 +65,25 @@ export class MessagesRepository {
     return this.prismaService.message.findUnique({
       where: {
         id: messageId,
+      },
+    });
+  }
+
+  async updateMessage(
+    data: UpdateMessageDto,
+    senderId: string,
+  ): Promise<MessageWithSender> {
+    return this.prismaService.message.update({
+      where: {
+        id: data.messageId,
+        senderId: senderId,
+        roomId: data.roomId,
+      },
+      data: {
+        content: data.content,
+      },
+      include: {
+        sender: true,
       },
     });
   }

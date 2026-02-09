@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { MessagesRepository } from './messages.repository';
-import { GetMessagesDto, Message, MessageWithSender } from 'src/shared';
+import {
+  GetMessagesDto,
+  Message,
+  MessageWithSender,
+  UpdateMessageDto,
+} from 'src/shared';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -31,5 +36,20 @@ export class MessagesService {
 
   async getMessageByMessageId(messageId: string): Promise<Message | null> {
     return this.messagesRepository.getMessageByMessageId(messageId);
+  }
+
+  async updateMessage(
+    data: UpdateMessageDto,
+    senderId: string,
+  ): Promise<MessageWithSender> {
+    const message = await this.messagesRepository.updateMessage(
+      data,
+      senderId,
+    );
+
+    // TODO: Emit event for message update
+    // this.eventEmitter.emit('message_updated', message.roomId, message);
+
+    return message;
   }
 }
