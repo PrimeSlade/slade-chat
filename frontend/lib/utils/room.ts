@@ -1,3 +1,4 @@
+import { ResponseFormat, RoomParticipantWithRoom } from "@backend/shared/index";
 import { getInitials } from "./string";
 
 type RoomLike = {
@@ -41,12 +42,12 @@ export const getRoomDisplay = (room: RoomLike) => {
 type MessageData = {
   id: string;
   content: string;
-  createdAt: string;
+  createdAt: string | Date;
   senderId: string;
 };
 
-export const updateRoomMessages = <T extends { roomId: string; room: any }>(
-  oldData: { data: T[] },
+export const updateRoomMessages = (
+  oldData: ResponseFormat<RoomParticipantWithRoom[]>,
   roomId: string,
   message: MessageData
 ) => {
