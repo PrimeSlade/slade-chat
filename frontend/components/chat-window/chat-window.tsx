@@ -93,6 +93,9 @@ export function ChatWindow({
         queryClient.invalidateQueries({ queryKey: ["rooms"] });
       }
 
+      //prevent ui bug since I sent using userId
+      if (message.data.roomId !== roomId) return;
+
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         if (!oldData) return oldData;
 
