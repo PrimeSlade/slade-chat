@@ -151,6 +151,14 @@ export default function ChatInput({
       await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
 
+      const messagesData = queryClient.getQueryData<any>([
+        "messages",
+        roomId,
+        20,
+      ]);
+      const isLatestMessage =
+        messagesData?.pages?.[0]?.data?.[0]?.id === updatedMessage.messageId;
+
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         return updateMessageInPages(
           oldData,
@@ -160,31 +168,22 @@ export default function ChatInput({
         );
       });
 
-      const messagesData = queryClient.getQueryData<any>([
-        "messages",
-        roomId,
-        20,
-      ]);
-      const isLatestMessage =
-        messagesData?.pages?.[0]?.data?.[messagesData.pages[0].data.length - 1]
-          ?.id === updatedMessage.messageId;
-
       if (isLatestMessage) {
-        queryClient.setQueryData(
-          ["rooms"],
-          (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
-            if (!oldData) return oldData;
+        const currentMessage = messagesData?.pages?.[0]?.data?.[0];
+        if (currentMessage) {
+          queryClient.setQueryData(
+            ["rooms"],
+            (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
+              if (!oldData) return oldData;
 
-            return updateRoomMessages(oldData, roomId!, {
-              id: updatedMessage.messageId,
-              content: updatedMessage.content,
-              createdAt:
-                oldData.data.find((r) => r.roomId === roomId)?.room
-                  .messages?.[0]?.createdAt || new Date().toISOString(),
-              senderId: session!.user.id,
-            });
-          }
-        );
+              return updateRoomMessages(oldData, roomId!, {
+                ...currentMessage,
+                content: updatedMessage.content,
+                updatedAt: new Date().toISOString(),
+              });
+            }
+          );
+        }
       }
 
       return { previousContent: editingMessage?.content };
@@ -205,8 +204,7 @@ export default function ChatInput({
         20,
       ]);
       const isLatestMessage =
-        messagesData?.pages?.[0]?.data?.[messagesData.pages[0].data.length - 1]
-          ?.id === savedMessage?.data.id;
+        messagesData?.pages?.[0]?.data?.[0]?.id === savedMessage?.data.id;
 
       if (isLatestMessage) {
         queryClient.setQueryData(
@@ -214,12 +212,7 @@ export default function ChatInput({
           (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
             if (!oldData) return oldData;
 
-            return updateRoomMessages(oldData, roomId!, {
-              id: savedMessage!.data.id,
-              content: savedMessage!.data.content,
-              createdAt: savedMessage!.data.createdAt,
-              senderId: savedMessage!.data.senderId,
-            });
+            return updateRoomMessages(oldData, roomId!, savedMessage!.data);
           }
         );
       }
