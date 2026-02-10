@@ -218,6 +218,18 @@ export class ChatGateway
     this.server.to(memberids).emit('new_message', { data: payload });
   }
 
+  @OnEvent('message_updated')
+  async handleMessageUpdatedEvent(roomId: string, payload: MessageWithSender) {
+    const data = await this.roomsService.getRoomParticipantsByRoomId(
+      roomId,
+      payload.senderId,
+    );
+
+    const memberids = data.map((user) => user.userId);
+
+    this.server.to(memberids).emit('message_updated', { data: payload });
+  }
+
   @OnEvent('room_created')
   handleDriectRoomCreatedEvent(userId: string) {
     this.server.to(userId).emit('room_invalidate');
