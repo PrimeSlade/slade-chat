@@ -87,4 +87,27 @@ export class MessagesRepository {
       },
     });
   }
+
+  async softDeleteMessage(
+    messageId: string,
+    roomId: string,
+    senderId: string,
+    trx?: Prisma.TransactionClient,
+  ): Promise<MessageWithSender> {
+    const db = trx || this.prismaService;
+
+    return db.message.update({
+      where: {
+        id: messageId,
+        senderId: senderId,
+        roomId: roomId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+      include: {
+        sender: true,
+      },
+    });
+  }
 }

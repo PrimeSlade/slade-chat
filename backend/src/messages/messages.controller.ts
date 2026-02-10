@@ -94,4 +94,20 @@ export class MessagesController {
 
     return { data: message, message: 'Message updated sucessfully' };
   }
+
+  @UseGuards(MessageSenderGuard)
+  @Patch('room/:roomId/:messageId/delete')
+  async softDeleteMessage(
+    @Param('roomId') roomId: string,
+    @Param('messageId') messageId: string,
+    @Session() session: UserSession,
+  ): Promise<ControllerResponse<MessageWithSender>> {
+    const message = await this.messagesService.softDeleteMessage(
+      messageId,
+      roomId,
+      session.user.id,
+    );
+
+    return { data: message, message: 'Message deleted successfully' };
+  }
 }

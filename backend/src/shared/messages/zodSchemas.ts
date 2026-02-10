@@ -38,3 +38,10 @@ export type UpdateMessageBodyDto = z.infer<typeof updateMessageBodySchema>;
 
 export type GetMessagesBodyDto = z.infer<typeof getMessagesBodySchema>;
 export type GetMessagesDto = z.infer<typeof getMessagesSchema>;
+
+export const softDeleteMessageSchema = z.object({
+  messageId: z.string(),
+  roomId: z.string(),
+});
+
+export type SoftDeleteMessageDto = z.infer<typeof softDeleteMessageSchema>;

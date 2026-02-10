@@ -48,4 +48,20 @@ export class MessagesService {
 
     return message;
   }
+
+  async softDeleteMessage(
+    messageId: string,
+    roomId: string,
+    senderId: string,
+  ): Promise<MessageWithSender> {
+    const message = await this.messagesRepository.softDeleteMessage(
+      messageId,
+      roomId,
+      senderId,
+    );
+
+    this.eventEmitter.emit('message_deleted', message.roomId, message);
+
+    return message;
+  }
 }
