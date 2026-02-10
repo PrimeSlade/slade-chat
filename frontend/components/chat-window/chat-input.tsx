@@ -9,8 +9,8 @@ import * as z from "zod";
 import { createDirectRoom } from "@/lib/api/rooms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { createMessage } from "@/lib/api/messages";
-import { useEffect, useRef, useState } from "react";
+import { createMessage, updateMessage } from "@/lib/api/messages";
+import { useEffect, useRef } from "react";
 import { useSocket } from "@/hooks/use-socket";
 import { EditIndicator } from "../ui/edit-indicator";
 import { useSession } from "@/lib/auth-client";
@@ -18,6 +18,7 @@ import {
   addToFirstPage,
   updateFirstPage,
   updateRoomMessages,
+  updateMessageInPages,
 } from "@/lib/utils";
 import { ResponseFormat, RoomParticipantWithRoom } from "@backend/shared/index";
 
@@ -55,6 +56,7 @@ export default function ChatInput({
     defaultValues: { message: "" },
   });
 
+  //create directRoom
   const { mutate: directRoomMutate } = useMutation({
     mutationFn: createDirectRoom,
     onSuccess: (data) => {
@@ -63,6 +65,7 @@ export default function ChatInput({
     },
   });
 
+  //create message
   const { mutate: createMessageMutate } = useMutation({
     mutationFn: createMessage,
     onMutate: async (newMessage) => {
@@ -141,6 +144,92 @@ export default function ChatInput({
     },
   });
 
+  //edit message
+  const { mutate: updateMessageMutate } = useMutation({
+    mutationFn: updateMessage,
+    onMutate: async (updatedMessage) => {
+      await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
+      await queryClient.cancelQueries({ queryKey: ["rooms"] });
+
+      queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
+        return updateMessageInPages(
+          oldData,
+          updatedMessage.messageId,
+          updatedMessage.content,
+          new Date().toISOString()
+        );
+      });
+
+      const messagesData = queryClient.getQueryData<any>([
+        "messages",
+        roomId,
+        20,
+      ]);
+      const isLatestMessage =
+        messagesData?.pages?.[0]?.data?.[messagesData.pages[0].data.length - 1]
+          ?.id === updatedMessage.messageId;
+
+      if (isLatestMessage) {
+        queryClient.setQueryData(
+          ["rooms"],
+          (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
+            if (!oldData) return oldData;
+
+            return updateRoomMessages(oldData, roomId!, {
+              id: updatedMessage.messageId,
+              content: updatedMessage.content,
+              createdAt:
+                oldData.data.find((r) => r.roomId === roomId)?.room
+                  .messages?.[0]?.createdAt || new Date().toISOString(),
+              senderId: session!.user.id,
+            });
+          }
+        );
+      }
+
+      return { previousContent: editingMessage?.content };
+    },
+    onSuccess: (savedMessage) => {
+      queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
+        return updateMessageInPages(
+          oldData,
+          savedMessage!.data.id,
+          savedMessage!.data.content,
+          savedMessage!.data.updatedAt!
+        );
+      });
+
+      const messagesData = queryClient.getQueryData<any>([
+        "messages",
+        roomId,
+        20,
+      ]);
+      const isLatestMessage =
+        messagesData?.pages?.[0]?.data?.[messagesData.pages[0].data.length - 1]
+          ?.id === savedMessage?.data.id;
+
+      if (isLatestMessage) {
+        queryClient.setQueryData(
+          ["rooms"],
+          (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
+            if (!oldData) return oldData;
+
+            return updateRoomMessages(oldData, roomId!, {
+              id: savedMessage!.data.id,
+              content: savedMessage!.data.content,
+              createdAt: savedMessage!.data.createdAt,
+              senderId: savedMessage!.data.senderId,
+            });
+          }
+        );
+      }
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+    },
+  });
+
   const messageValue = form.watch("message");
   const charCount = messageValue?.length || 0;
   const isExceeded = charCount > 2000;
@@ -150,7 +239,7 @@ export default function ChatInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!messageValue || !roomId || !session?.user.id) return;
+    if (!messageValue || !roomId || !session?.user.id || editingMessage) return;
 
     const now = Date.now();
 
@@ -185,12 +274,11 @@ export default function ChatInput({
 
     if (editingMessage) {
       if (data.message.trim() !== editingMessage.content.trim()) {
-        console.log(
-          "Editing message:",
-          editingMessage.id,
-          "with:",
-          data.message
-        );
+        updateMessageMutate({
+          roomId: roomId!,
+          messageId: editingMessage.id,
+          content: data.message,
+        });
       }
       //clear state
       if (onCancelEdit) {

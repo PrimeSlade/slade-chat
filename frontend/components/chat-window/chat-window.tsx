@@ -6,7 +6,12 @@ import ChatInput from "./chat-input";
 import { MessageList } from "../message/message-list";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSocket } from "@/hooks/use-socket";
-import { addToFirstPage, getInitials, getRoomDisplay } from "@/lib/utils";
+import {
+  addToFirstPage,
+  getInitials,
+  getRoomDisplay,
+  updateMessageInPages,
+} from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -116,6 +121,28 @@ export function ChatWindow({
       });
     };
 
+    const handleMessageUpdated = (
+      message: ResponseFormat<MessageWithSender>
+    ) => {
+      if (message.data.senderId !== session?.user.id) {
+        queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      }
+
+      //prevent ui bug
+      if (message.data.roomId !== roomId) return;
+
+      queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        return updateMessageInPages(
+          oldData,
+          message.data.id,
+          message.data.content,
+          message.data.updatedAt!
+        );
+      });
+    };
+
     const handleTyping = (userId: string) => {
       setIsTypingUsers((prev) => new Set(prev).add(userId));
 
@@ -158,11 +185,13 @@ export function ChatWindow({
     };
 
     socket.on("new_message", handleNewMessage);
+    socket.on("message_updated", handleMessageUpdated);
     socket.on("user_typing", handleTyping);
     socket.on("user_read_update", handleReadUpdate);
 
     return () => {
       socket.off("new_message", handleNewMessage);
+      socket.off("message_updated", handleMessageUpdated);
       socket.off("user_typing", handleTyping);
       socket.off("user_read_update", handleReadUpdate);
     };

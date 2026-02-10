@@ -3,18 +3,13 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday } from "date-fns";
 import { Check, CheckCheck } from "lucide-react";
 import { MessageActionsDropdown } from "./message-actions-dropdown";
-import { RoomWithParticipantStatus } from "@backend/shared";
+import { MessageWithSender, RoomWithParticipantStatus } from "@backend/shared";
 import { useSession } from "@/lib/auth-client";
 
 interface MessageBubbleProps {
-  messageId: string;
-  content: string;
-  createdAt: Date;
+  message: MessageWithSender & { isPending?: boolean };
   isMine: boolean;
-  senderName?: string;
-  senderAvatar?: string;
   showAvatar?: boolean;
-  isPending?: boolean;
   isLast?: boolean;
   lastMessageRef?: (node: HTMLDivElement | null) => void;
   participants?: RoomWithParticipantStatus["room"]["participants"];
@@ -22,14 +17,9 @@ interface MessageBubbleProps {
 }
 
 export default function MessageBubble({
-  messageId,
-  content,
-  createdAt,
+  message,
   isMine,
-  senderName,
-  senderAvatar,
   showAvatar = true,
-  isPending = false,
   isLast = false,
   lastMessageRef,
   participants = [],
@@ -43,7 +33,7 @@ export default function MessageBubble({
     return participants.filter(
       (participant) =>
         participant.userId !== session.user.id &&
-        new Date(participant.lastReadAt) >= new Date(createdAt)
+        new Date(participant.lastReadAt) >= new Date(message.createdAt)
     );
   };
 
@@ -53,18 +43,18 @@ export default function MessageBubble({
   };
 
   const handleReply = () => {
-    console.log("Reply to message:", messageId);
+    console.log("Reply to message:", message.id);
     // TODO: Implement reply functionality
   };
 
   const handleEdit = () => {
     if (onEditMessage) {
-      onEditMessage({ id: messageId, content });
+      onEditMessage({ id: message.id, content: message.content });
     }
   };
 
   const handleDelete = () => {
-    console.log("Delete message:", messageId);
+    console.log("Delete message:", message.id);
     // TODO: Implement delete functionality
   };
 
@@ -81,8 +71,10 @@ export default function MessageBubble({
         <div className="w-8 flex-shrink-0">
           {showAvatar ? (
             <Avatar className="w-8 h-8">
-              <AvatarImage src={senderAvatar} />
-              <AvatarFallback>{getInitials(senderName!)}</AvatarFallback>
+              <AvatarImage src={message.sender.image || undefined} />
+              <AvatarFallback>
+                {getInitials(message.sender.name!)}
+              </AvatarFallback>
             </Avatar>
           ) : (
             <div className="w-8" /> // Spacer to keep alignment if avatar is hidden
@@ -106,7 +98,7 @@ export default function MessageBubble({
               : "bg-gray-100 text-gray-900 rounded-bl-none" // Their Style
           )}
         >
-          <p>{content}</p>
+          <p>{message.content}</p>
           {
             <span
               className={cn(
@@ -116,10 +108,13 @@ export default function MessageBubble({
                   : "text-gray-400 justify-start"
               )}
             >
-              {format(new Date(createdAt), "HH:mm")}
+              {message.updatedAt &&
+                new Date(message.updatedAt).getTime() >
+                  new Date(message.createdAt).getTime() && <span>edited</span>}
+              {format(new Date(message.createdAt), "HH:mm")}
               {isMine && (
                 <span className="inline-flex -space-x-1">
-                  {isPending ? (
+                  {message.isPending ? (
                     <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                   ) : (
                     // Double tick for sent, green if seen by others
