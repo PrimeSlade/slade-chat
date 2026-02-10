@@ -115,14 +115,9 @@ export function MessageList({
             )}
             <MessageBubble
               key={msg.id}
-              messageId={msg.id}
-              content={msg.content}
-              createdAt={msg.createdAt}
+              message={msg}
               isMine={isMine}
-              senderName={msg.sender.name}
-              senderAvatar={msg.sender.image!}
               showAvatar={!isMine}
-              isPending={msg.isPending}
               isLast={isLast}
               lastMessageRef={lastMessageRef}
               participants={participants}
