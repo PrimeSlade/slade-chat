@@ -108,10 +108,15 @@ export default function MessageBubble({
                   : "text-gray-400 justify-start"
               )}
             >
-              {message.updatedAt &&
+              {isMine &&
+                message.updatedAt &&
                 new Date(message.updatedAt).getTime() >
                   new Date(message.createdAt).getTime() && <span>edited</span>}
               {format(new Date(message.createdAt), "HH:mm")}
+              {!isMine &&
+                message.updatedAt &&
+                new Date(message.updatedAt).getTime() >
+                  new Date(message.createdAt).getTime() && <span>edited</span>}
               {isMine && (
                 <span className="inline-flex -space-x-1">
                   {message.isPending ? (
