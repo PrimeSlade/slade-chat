@@ -7,4 +7,4 @@ export {
   formatlastSeen,
 } from "./date";
 export { getRoomDisplay, updateRoomMessages, type RoomLike } from "./room";
-export { addToFirstPage, updateFirstPage } from "./react-query";
+export { addToFirstPage, updateFirstPage, updateMessageInPages } from "./react-query";

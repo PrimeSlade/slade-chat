@@ -24,3 +24,28 @@ export function updateFirstPage<T>(oldData: any, updatedData: T[]) {
     ],
   };
 }
+
+export function updateMessageInPages(
+  oldData: any,
+  messageId: string,
+  updatedContent: string,
+  updatedAt?: string | Date
+) {
+  if (!oldData || !oldData.pages) return oldData;
+
+  return {
+    ...oldData,
+    pages: oldData.pages.map((page: any) => ({
+      ...page,
+      data: page.data.map((msg: any) =>
+        msg.id === messageId 
+          ? { 
+              ...msg, 
+              content: updatedContent,
+              updatedAt: updatedAt || new Date().toISOString()
+            } 
+          : msg
+      ),
+    })),
+  };
+}
