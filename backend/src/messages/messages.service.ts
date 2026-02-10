@@ -42,13 +42,9 @@ export class MessagesService {
     data: UpdateMessageDto,
     senderId: string,
   ): Promise<MessageWithSender> {
-    const message = await this.messagesRepository.updateMessage(
-      data,
-      senderId,
-    );
+    const message = await this.messagesRepository.updateMessage(data, senderId);
 
-    // TODO: Emit event for message update
-    // this.eventEmitter.emit('message_updated', message.roomId, message);
+    this.eventEmitter.emit('message_updated', message.roomId, message);
 
     return message;
   }

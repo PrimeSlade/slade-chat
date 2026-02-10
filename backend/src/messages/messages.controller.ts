@@ -73,7 +73,7 @@ export class MessagesController {
   }
 
   @UseGuards(MessageSenderGuard)
-  @Put('room/:roomId/:messageId')
+  @Patch('room/:roomId/:messageId')
   async updateMessage(
     @Param('roomId') roomId: string,
     @Param('messageId') messageId: string,
