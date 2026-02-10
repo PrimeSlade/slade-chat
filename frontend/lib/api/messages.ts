@@ -3,6 +3,7 @@ import {
   ResponseFormat,
   GetMessagesDto,
   CreateMessageDto,
+  UpdateMessageDto,
   MessageWithSender,
 } from "@backend/shared";
 
@@ -35,4 +36,22 @@ const getMessages = async ({ roomId, ...params }: GetMessagesDto) => {
   }
 };
 
-export { createMessage, getMessages };
+const updateMessage = async ({
+  roomId,
+  messageId,
+  content,
+}: UpdateMessageDto): Promise<
+  ResponseFormat<MessageWithSender> | undefined
+> => {
+  try {
+    const { data } = await axiosInstance.patch<
+      ResponseFormat<MessageWithSender>
+    >(`/messages/room/${roomId}/${messageId}`, { content });
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+export { createMessage, getMessages, updateMessage };
