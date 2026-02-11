@@ -1,4 +1,19 @@
 // Optimistic Update Utilities for React Query Infinite Queries
+
+export function getSortedMessages<T extends { createdAt: string | Date }>(
+  messagesData: any,
+  order: "asc" | "desc" = "desc"
+): T[] {
+  const messages =
+    messagesData?.pages?.flatMap((page: any) => page?.data) ?? [];
+
+  return messages.sort((a: T, b: T) => {
+    const timeA = +new Date(a.createdAt);
+    const timeB = +new Date(b.createdAt);
+    return order === "asc" ? timeA - timeB : timeB - timeA;
+  });
+}
+
 export function addToFirstPage<T>(oldData: any, newItem: T) {
   return {
     ...oldData,
@@ -38,12 +53,12 @@ export function updateMessageInPages(
     pages: oldData.pages.map((page: any) => ({
       ...page,
       data: page.data.map((msg: any) =>
-        msg.id === messageId 
-          ? { 
-              ...msg, 
+        msg.id === messageId
+          ? {
+              ...msg,
               content: updatedContent,
-              updatedAt: updatedAt || new Date().toISOString()
-            } 
+              updatedAt: updatedAt || new Date().toISOString(),
+            }
           : msg
       ),
     })),

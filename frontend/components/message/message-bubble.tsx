@@ -49,7 +49,7 @@ export default function MessageBubble({
 
   const handleEdit = () => {
     if (onEditMessage) {
-      onEditMessage({ id: message.id, content: message.content });
+      onEditMessage({ id: message.id, content: message.content! });
     }
   };
 
