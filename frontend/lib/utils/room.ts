@@ -39,12 +39,7 @@ export const getRoomDisplay = (room: RoomLike) => {
   };
 };
 
-type MessageData = {
-  id: string;
-  content: string;
-  createdAt: string | Date;
-  senderId: string;
-};
+type MessageData = RoomParticipantWithRoom["room"]["messages"][number];
 
 export const updateRoomMessages = (
   oldData: ResponseFormat<RoomParticipantWithRoom[]>,
