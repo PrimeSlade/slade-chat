@@ -137,7 +137,7 @@ model RoomParticipant {
 
 model Message {
   id        String   @id @default(uuid())
-  content   String   @db.Text
+  content   String?   @db.Text
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
   deletedAt DateTime?   

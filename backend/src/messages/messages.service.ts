@@ -7,6 +7,10 @@ import {
   UpdateMessageDto,
 } from 'src/shared';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  transformSoftDeletedMessage,
+  transformSoftDeletedMessages,
+} from 'src/common/helpers/soft-delete.helper';
 
 @Injectable()
 export class MessagesService {
@@ -19,7 +23,11 @@ export class MessagesService {
     messages: MessageWithSender[];
     nextCursor: string | null;
   }> {
-    return this.messagesRepository.getMessages(query);
+    const result = await this.messagesRepository.getMessages(query);
+    return {
+      messages: transformSoftDeletedMessages(result.messages),
+      nextCursor: result.nextCursor,
+    };
   }
 
   async createMessage(data: {
@@ -60,8 +68,10 @@ export class MessagesService {
       senderId,
     );
 
-    this.eventEmitter.emit('message_deleted', message.roomId, message);
+    const transformedMessage = transformSoftDeletedMessage(message);
 
-    return message;
+    this.eventEmitter.emit('message_deleted', message.roomId, transformedMessage);
+
+    return transformedMessage;
   }
 }
