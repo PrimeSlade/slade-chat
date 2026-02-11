@@ -11,6 +11,7 @@ import {
   getInitials,
   getRoomDisplay,
   updateMessageInPages,
+  getSortedMessages,
 } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
@@ -87,12 +88,9 @@ export function ChatWindow({
     }
   }, [error, router]);
 
+  //Ascending order
   const messages = useMemo(() => {
-    return (
-      messagesData?.pages
-        .flatMap((page) => page?.data)
-        .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt)) ?? []
-    );
+    return getSortedMessages<MessageWithSender>(messagesData, "asc");
   }, [messagesData]);
 
   useEffect(() => {
@@ -137,7 +135,7 @@ export function ChatWindow({
         return updateMessageInPages(
           oldData,
           message.data.id,
-          message.data.content,
+          message.data.content!,
           message.data.updatedAt!
         );
       });

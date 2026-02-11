@@ -19,8 +19,13 @@ import {
   updateFirstPage,
   updateRoomMessages,
   updateMessageInPages,
+  getSortedMessages,
 } from "@/lib/utils";
-import { ResponseFormat, RoomParticipantWithRoom } from "@backend/shared/index";
+import {
+  ResponseFormat,
+  RoomParticipantWithRoom,
+  MessageWithSender,
+} from "@backend/shared/index";
 
 interface ChatInputProps {
   isGhostMode?: boolean;
@@ -95,8 +100,11 @@ export default function ChatInput({
           return updateRoomMessages(oldData, roomId!, {
             id: optimisticMessage.id,
             content: optimisticMessage.content,
-            createdAt: optimisticMessage.createdAt,
+            createdAt: new Date(optimisticMessage.createdAt),
             senderId: optimisticMessage.senderId,
+            roomId: roomId!,
+            updatedAt: null,
+            deletedAt: null,
           });
         }
       );
@@ -132,6 +140,9 @@ export default function ChatInput({
             content: savedMessage!.data.content,
             createdAt: savedMessage!.data.createdAt,
             senderId: savedMessage!.data.senderId,
+            roomId: roomId!,
+            updatedAt: null,
+            deletedAt: null,
           });
         }
       );
@@ -156,8 +167,14 @@ export default function ChatInput({
         roomId,
         20,
       ]);
+
+      const sortedMessages = getSortedMessages<MessageWithSender>(
+        messagesData,
+        "desc"
+      );
+
       const isLatestMessage =
-        messagesData?.pages?.[0]?.data?.[0]?.id === updatedMessage.messageId;
+        sortedMessages[0]?.id === updatedMessage.messageId;
 
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         return updateMessageInPages(
@@ -169,7 +186,7 @@ export default function ChatInput({
       });
 
       if (isLatestMessage) {
-        const currentMessage = messagesData?.pages?.[0]?.data?.[0];
+        const currentMessage = sortedMessages[0];
         if (currentMessage) {
           queryClient.setQueryData(
             ["rooms"],
@@ -179,7 +196,7 @@ export default function ChatInput({
               return updateRoomMessages(oldData, roomId!, {
                 ...currentMessage,
                 content: updatedMessage.content,
-                updatedAt: new Date().toISOString(),
+                updatedAt: new Date(),
               });
             }
           );
@@ -193,7 +210,7 @@ export default function ChatInput({
         return updateMessageInPages(
           oldData,
           savedMessage!.data.id,
-          savedMessage!.data.content,
+          savedMessage!.data.content!,
           savedMessage!.data.updatedAt!
         );
       });
@@ -203,8 +220,13 @@ export default function ChatInput({
         roomId,
         20,
       ]);
-      const isLatestMessage =
-        messagesData?.pages?.[0]?.data?.[0]?.id === savedMessage?.data.id;
+
+      const sortedMessages = getSortedMessages<MessageWithSender>(
+        messagesData,
+        "desc"
+      );
+
+      const isLatestMessage = sortedMessages[0]?.id === savedMessage?.data.id;
 
       if (isLatestMessage) {
         queryClient.setQueryData(
