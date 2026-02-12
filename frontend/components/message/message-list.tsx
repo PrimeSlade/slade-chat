@@ -17,6 +17,7 @@ interface MessageListProps {
   participants?: RoomWithParticipantStatus["room"]["participants"];
   roomId?: string;
   onEditMessage?: (message: { id: string; content: string }) => void;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 export function MessageList({
@@ -28,6 +29,7 @@ export function MessageList({
   participants,
   roomId,
   onEditMessage,
+  onDeleteMessage,
 }: MessageListProps) {
   const { data: session } = useSession();
 
@@ -122,6 +124,7 @@ export function MessageList({
               lastMessageRef={lastMessageRef}
               participants={participants}
               onEditMessage={onEditMessage}
+              onDeleteMessage={onDeleteMessage}
             />
           </div>
         );

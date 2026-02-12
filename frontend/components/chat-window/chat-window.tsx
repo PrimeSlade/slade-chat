@@ -26,6 +26,7 @@ import { MessageSkeletonLoader } from "./message-skeleton-loader";
 import { ChatHeaderSkeleton } from "../chat-list/chat-skeletons";
 import ChatHeaderGroup from "./chat-header-group";
 import { useSession } from "@/lib/auth-client";
+import { useMessageMutations } from "@/hooks/use-messages";
 
 interface ChatWindowProps {
   roomId?: string;
@@ -57,6 +58,11 @@ export function ChatWindow({
   );
 
   const { data: session } = useSession();
+
+  const { deleteMessageMutate } = useMessageMutations({
+    roomId,
+    session,
+  });
 
   const {
     data: roomData,
@@ -135,8 +141,9 @@ export function ChatWindow({
         return updateMessageInPages(
           oldData,
           message.data.id,
-          message.data.content!,
-          message.data.updatedAt!
+          message.data.content,
+          message.data.updatedAt!,
+          message.data.deletedAt
         );
       });
     };
@@ -259,6 +266,7 @@ export function ChatWindow({
           participants={roomData?.data.room?.participants}
           roomId={roomId}
           onEditMessage={setEditingMessage}
+          onDeleteMessage={deleteMessageMutate}
         />
       ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">

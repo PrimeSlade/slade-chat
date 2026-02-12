@@ -14,6 +14,7 @@ interface MessageBubbleProps {
   lastMessageRef?: (node: HTMLDivElement | null) => void;
   participants?: RoomWithParticipantStatus["room"]["participants"];
   onEditMessage?: (message: { id: string; content: string }) => void;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 export default function MessageBubble({
@@ -24,8 +25,11 @@ export default function MessageBubble({
   lastMessageRef,
   participants = [],
   onEditMessage,
+  onDeleteMessage,
 }: MessageBubbleProps) {
   const { data: session } = useSession();
+
+  const isDeleted = message.deletedAt !== null || message.content === null;
 
   const getUsersWhoSeen = () => {
     if (!participants || !session?.user?.id) return [];
@@ -54,8 +58,9 @@ export default function MessageBubble({
   };
 
   const handleDelete = () => {
-    console.log("Delete message:", message.id);
-    // TODO: Implement delete functionality
+    if (onDeleteMessage) {
+      onDeleteMessage(message.id);
+    }
   };
 
   return (
@@ -86,19 +91,22 @@ export default function MessageBubble({
       <MessageActionsDropdown
         isMine={isMine}
         seenUsers={getUsersWhoSeen()}
-        onReply={handleReply}
-        onEdit={isMine ? handleEdit : undefined}
-        onDelete={isMine ? handleDelete : undefined}
+        onReply={!isDeleted ? handleReply : undefined}
+        onEdit={isMine && !isDeleted ? handleEdit : undefined}
+        onDelete={isMine && !isDeleted ? handleDelete : undefined}
       >
         <div
           className={cn(
             "max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm cursor-pointer transition-all hover:shadow-md",
             isMine
               ? "bg-black text-white rounded-br-none " // My Style
-              : "bg-gray-100 text-gray-900 rounded-bl-none" // Their Style
+              : "bg-gray-100 text-gray-900 rounded-bl-none", // Their Style
+            isDeleted && "opacity-70"
           )}
         >
-          <p>{message.content}</p>
+          <p className={cn(isDeleted && "italic text-gray-400")}>
+            {isDeleted ? "Message deleted" : message.content}
+          </p>
           {
             <span
               className={cn(
@@ -109,11 +117,13 @@ export default function MessageBubble({
               )}
             >
               {isMine &&
+                !isDeleted &&
                 message.updatedAt &&
                 new Date(message.updatedAt).getTime() >
                   new Date(message.createdAt).getTime() && <span>edited</span>}
               {format(new Date(message.createdAt), "HH:mm")}
               {!isMine &&
+                !isDeleted &&
                 message.updatedAt &&
                 new Date(message.updatedAt).getTime() >
                   new Date(message.createdAt).getTime() && <span>edited</span>}

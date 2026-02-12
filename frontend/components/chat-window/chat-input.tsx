@@ -9,23 +9,11 @@ import * as z from "zod";
 import { createDirectRoom } from "@/lib/api/rooms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { createMessage, updateMessage } from "@/lib/api/messages";
 import { useEffect, useRef } from "react";
 import { useSocket } from "@/hooks/use-socket";
 import { EditIndicator } from "../ui/edit-indicator";
 import { useSession } from "@/lib/auth-client";
-import {
-  addToFirstPage,
-  updateFirstPage,
-  updateRoomMessages,
-  updateMessageInPages,
-  getSortedMessages,
-} from "@/lib/utils";
-import {
-  ResponseFormat,
-  RoomParticipantWithRoom,
-  MessageWithSender,
-} from "@backend/shared/index";
+import { useMessageMutations } from "@/hooks/use-messages";
 
 interface ChatInputProps {
   isGhostMode?: boolean;
@@ -70,179 +58,11 @@ export default function ChatInput({
     },
   });
 
-  //create message
-  const { mutate: createMessageMutate } = useMutation({
-    mutationFn: createMessage,
-    onMutate: async (newMessage) => {
-      await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
-      await queryClient.cancelQueries({ queryKey: ["rooms"] });
-
-      const optimisticMessage = {
-        id: `temp-${Date.now()}`,
-        content: newMessage.content,
-        createdAt: new Date().toISOString(),
-        roomId: roomId,
-        senderId: session!.user.id,
-        sender: session!.user,
-        isPending: true,
-      };
-
-      queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
-        if (!oldData) return oldData;
-        return addToFirstPage(oldData, optimisticMessage);
-      });
-
-      queryClient.setQueryData(
-        ["rooms"],
-        (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
-          if (!oldData) return oldData;
-
-          return updateRoomMessages(oldData, roomId!, {
-            id: optimisticMessage.id,
-            content: optimisticMessage.content,
-            createdAt: new Date(optimisticMessage.createdAt),
-            senderId: optimisticMessage.senderId,
-            roomId: roomId!,
-            updatedAt: null,
-            deletedAt: null,
-          });
-        }
-      );
-
-      form.reset();
-
-      return { optimisticMessage };
-    },
-    onSuccess: (savedMessage, newContent, context) => {
-      queryClient.setQueriesData(
-        { queryKey: ["messages", roomId] },
-        (oldData: any) => {
-          if (!oldData || !oldData.pages) return oldData;
-
-          const updatedFirstPageData = oldData.pages[0].data.map((msg: any) => {
-            if (msg.id === context?.optimisticMessage.id) {
-              return savedMessage!.data;
-            }
-            return msg;
-          });
-
-          return updateFirstPage(oldData, updatedFirstPageData);
-        }
-      );
-
-      queryClient.setQueryData(
-        ["rooms"],
-        (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
-          if (!oldData) return oldData;
-
-          return updateRoomMessages(oldData, roomId!, {
-            id: savedMessage!.data.id,
-            content: savedMessage!.data.content,
-            createdAt: savedMessage!.data.createdAt,
-            senderId: savedMessage!.data.senderId,
-            roomId: roomId!,
-            updatedAt: null,
-            deletedAt: null,
-          });
-        }
-      );
-
-      form.reset();
-    },
-    onError: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
-    },
-  });
-
-  //edit message
-  const { mutate: updateMessageMutate } = useMutation({
-    mutationFn: updateMessage,
-    onMutate: async (updatedMessage) => {
-      await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
-      await queryClient.cancelQueries({ queryKey: ["rooms"] });
-
-      const messagesData = queryClient.getQueryData<any>([
-        "messages",
-        roomId,
-        20,
-      ]);
-
-      const sortedMessages = getSortedMessages<MessageWithSender>(
-        messagesData,
-        "desc"
-      );
-
-      const isLatestMessage =
-        sortedMessages[0]?.id === updatedMessage.messageId;
-
-      queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
-        return updateMessageInPages(
-          oldData,
-          updatedMessage.messageId,
-          updatedMessage.content,
-          new Date().toISOString()
-        );
-      });
-
-      if (isLatestMessage) {
-        const currentMessage = sortedMessages[0];
-        if (currentMessage) {
-          queryClient.setQueryData(
-            ["rooms"],
-            (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
-              if (!oldData) return oldData;
-
-              return updateRoomMessages(oldData, roomId!, {
-                ...currentMessage,
-                content: updatedMessage.content,
-                updatedAt: new Date(),
-              });
-            }
-          );
-        }
-      }
-
-      return { previousContent: editingMessage?.content };
-    },
-    onSuccess: (savedMessage) => {
-      queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
-        return updateMessageInPages(
-          oldData,
-          savedMessage!.data.id,
-          savedMessage!.data.content!,
-          savedMessage!.data.updatedAt!
-        );
-      });
-
-      const messagesData = queryClient.getQueryData<any>([
-        "messages",
-        roomId,
-        20,
-      ]);
-
-      const sortedMessages = getSortedMessages<MessageWithSender>(
-        messagesData,
-        "desc"
-      );
-
-      const isLatestMessage = sortedMessages[0]?.id === savedMessage?.data.id;
-
-      if (isLatestMessage) {
-        queryClient.setQueryData(
-          ["rooms"],
-          (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
-            if (!oldData) return oldData;
-
-            return updateRoomMessages(oldData, roomId!, savedMessage!.data);
-          }
-        );
-      }
-    },
-    onError: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
-      queryClient.invalidateQueries({ queryKey: ["rooms"] });
-    },
+  const { createMessageMutate, updateMessageMutate } = useMessageMutations({
+    roomId,
+    session,
+    form,
+    editingMessage,
   });
 
   const messageValue = form.watch("message");

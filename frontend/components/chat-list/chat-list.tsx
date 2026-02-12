@@ -93,7 +93,11 @@ export function ChatList({
             key={room.id}
             roomId={room.id}
             name={displayName}
-            lastMessage={lastMessage?.content || "No messages yet"}
+            lastMessage={
+              lastMessage?.content === null && lastMessage?.deletedAt
+                ? "Message deleted"
+                : lastMessage?.content || "No messages yet"
+            }
             timestamp={
               lastMessage?.createdAt ? new Date(lastMessage?.createdAt) : null
             }
