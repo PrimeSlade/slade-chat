@@ -230,18 +230,6 @@ export class ChatGateway
     this.server.to(memberids).emit('message_updated', { data: payload });
   }
 
-  @OnEvent('message_deleted')
-  async handleMessageDeletedEvent(roomId: string, payload: MessageWithSender) {
-    const data = await this.roomsService.getRoomParticipantsByRoomId(
-      roomId,
-      payload.senderId,
-    );
-
-    const memberids = data.map((user) => user.userId);
-
-    this.server.to(memberids).emit('message_deleted', { data: payload });
-  }
-
   @OnEvent('room_created')
   handleDriectRoomCreatedEvent(userId: string) {
     this.server.to(userId).emit('room_invalidate');

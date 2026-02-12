@@ -70,7 +70,11 @@ export class MessagesService {
 
     const transformedMessage = transformSoftDeletedMessage(message);
 
-    this.eventEmitter.emit('message_deleted', message.roomId, transformedMessage);
+    this.eventEmitter.emit(
+      'message_updated',
+      message.roomId,
+      transformedMessage,
+    );
 
     return transformedMessage;
   }
