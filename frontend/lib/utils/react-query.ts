@@ -43,8 +43,9 @@ export function updateFirstPage<T>(oldData: any, updatedData: T[]) {
 export function updateMessageInPages(
   oldData: any,
   messageId: string,
-  updatedContent: string,
-  updatedAt?: string | Date
+  updatedContent: string | null,
+  updatedAt?: string | Date,
+  deletedAt?: string | Date | null
 ) {
   if (!oldData || !oldData.pages) return oldData;
 
@@ -58,6 +59,7 @@ export function updateMessageInPages(
               ...msg,
               content: updatedContent,
               updatedAt: updatedAt || new Date().toISOString(),
+              ...(deletedAt !== undefined && { deletedAt }),
             }
           : msg
       ),

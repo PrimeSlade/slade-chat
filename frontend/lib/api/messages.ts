@@ -5,6 +5,7 @@ import {
   CreateMessageDto,
   UpdateMessageDto,
   MessageWithSender,
+  SoftDeleteMessageDto,
 } from "@backend/shared";
 
 const createMessage = async ({
@@ -54,4 +55,21 @@ const updateMessage = async ({
   }
 };
 
-export { createMessage, getMessages, updateMessage };
+const deleteMessage = async ({
+  roomId,
+  messageId,
+}: SoftDeleteMessageDto): Promise<
+  ResponseFormat<MessageWithSender> | undefined
+> => {
+  try {
+    const { data } = await axiosInstance.patch<
+      ResponseFormat<MessageWithSender>
+    >(`/messages/room/${roomId}/${messageId}/delete`);
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+export { createMessage, getMessages, updateMessage, deleteMessage };
