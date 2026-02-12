@@ -16,6 +16,7 @@ import { MessagesRepository } from 'src/messages/messages.repository';
 import { PrismaService } from 'src/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { transformSoftDeletedMessage } from 'src/common/helpers/soft-delete.helper';
 
 @Injectable()
 export class RoomsService {
@@ -81,7 +82,16 @@ export class RoomsService {
   }
 
   async getRooms(myId: string): Promise<RoomParticipantWithRoom[]> {
-    return this.roomsRepository.findRooms(myId);
+    const rooms = await this.roomsRepository.findRooms(myId);
+
+    // Transform soft-deleted messages
+    return rooms.map((room) => ({
+      ...room,
+      room: {
+        ...room.room,
+        messages: room.room.messages.map(transformSoftDeletedMessage),
+      },
+    }));
   }
 
   async getMyRoomByRoomId(
