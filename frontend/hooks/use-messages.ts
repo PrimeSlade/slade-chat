@@ -233,6 +233,20 @@ export function useMessageMutations({
       deleteMessage({ roomId: roomId!, messageId }),
     onMutate: async (messageId) => {
       await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
+      await queryClient.cancelQueries({ queryKey: ["rooms"] });
+
+      const messagesData = queryClient.getQueryData<any>([
+        "messages",
+        roomId,
+        20,
+      ]);
+
+      const sortedMessages = getSortedMessages<MessageWithSender>(
+        messagesData,
+        "desc"
+      );
+
+      const isLatestMessage = sortedMessages[0]?.id === messageId;
 
       // Optimistically update to show message as deleted
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
@@ -246,6 +260,26 @@ export function useMessageMutations({
           new Date().toISOString()
         );
       });
+
+      // Update rooms list if this is the latest message
+      if (isLatestMessage) {
+        const currentMessage = sortedMessages[0];
+        if (currentMessage) {
+          queryClient.setQueryData(
+            ["rooms"],
+            (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
+              if (!oldData) return oldData;
+
+              return updateRoomMessages(oldData, roomId!, {
+                ...currentMessage,
+                content: null,
+                deletedAt: new Date(),
+                updatedAt: new Date(),
+              });
+            }
+          );
+        }
+      }
     },
     onSuccess: (response, messageId) => {
       // Update with actual server response
@@ -261,10 +295,36 @@ export function useMessageMutations({
             response.data.deletedAt
           );
         });
+
+        // Check if deleted message was the latest one
+        const messagesData = queryClient.getQueryData<any>([
+          "messages",
+          roomId,
+          20,
+        ]);
+
+        const sortedMessages = getSortedMessages<MessageWithSender>(
+          messagesData,
+          "desc"
+        );
+
+        const isLatestMessage = sortedMessages[0]?.id === messageId;
+
+        if (isLatestMessage) {
+          queryClient.setQueryData(
+            ["rooms"],
+            (oldData: ResponseFormat<RoomParticipantWithRoom[]>) => {
+              if (!oldData) return oldData;
+
+              return updateRoomMessages(oldData, roomId!, response.data);
+            }
+          );
+        }
       }
     },
     onError: (error: any) => {
       queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
       console.error("Failed to delete message:", error);
     },
   });
