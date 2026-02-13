@@ -52,7 +52,7 @@ export class MessagesRepository {
   }
 
   async createMessage(
-    data: CreateMessageDto,
+    data: CreateMessageDto & { senderId: string },
     trx?: Prisma.TransactionClient,
   ): Promise<MessageWithSender> {
     const db = trx || this.prismaService;
@@ -80,7 +80,7 @@ export class MessagesRepository {
     });
   }
 
-  async updateMessage(data: UpdateMessageDto): Promise<MessageWithSender> {
+  async updateMessage(data: UpdateMessageDto & { senderId: string; messageId: string }): Promise<MessageWithSender> {
     return this.prismaService.message.update({
       where: {
         id: data.messageId,

@@ -31,7 +31,9 @@ export class MessagesService {
     };
   }
 
-  async createMessage(data: CreateMessageDto): Promise<MessageWithSender> {
+  async createMessage(
+    data: CreateMessageDto & { senderId: string },
+  ): Promise<MessageWithSender> {
     const message = await this.messagesRepository.createMessage(data);
 
     this.eventEmitter.emit('message_created', message.roomId, message);
@@ -43,7 +45,9 @@ export class MessagesService {
     return this.messagesRepository.getMessageByMessageId(messageId);
   }
 
-  async updateMessage(data: UpdateMessageDto): Promise<MessageWithSender> {
+  async updateMessage(
+    data: UpdateMessageDto & { senderId: string },
+  ): Promise<MessageWithSender> {
     const message = await this.messagesRepository.updateMessage(data);
 
     this.eventEmitter.emit('message_updated', message.roomId, message);

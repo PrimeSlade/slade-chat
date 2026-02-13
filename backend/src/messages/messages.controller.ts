@@ -81,7 +81,7 @@ export class MessagesController {
     body: UpdateMessageBodyDto,
     @Session() session: UserSession,
   ): Promise<ControllerResponse<MessageWithSender>> {
-    const updateData: UpdateMessageDto = {
+    const updateData: UpdateMessageDto & { senderId: string } = {
       roomId,
       messageId,
       senderId: session.user.id,
