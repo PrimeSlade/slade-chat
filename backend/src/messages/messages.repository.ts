@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import {
+  CreateMessageDto,
   GetMessagesDto,
   Message,
   MessageWithSender,
@@ -26,6 +27,11 @@ export class MessagesRepository {
       }),
       include: {
         sender: true,
+        parent: {
+          include: {
+            sender: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: limit + 1,
@@ -46,7 +52,7 @@ export class MessagesRepository {
   }
 
   async createMessage(
-    data: { content: string; senderId: string; roomId: string },
+    data: CreateMessageDto,
     trx?: Prisma.TransactionClient,
   ): Promise<MessageWithSender> {
     const db = trx || this.prismaService;
@@ -57,6 +63,11 @@ export class MessagesRepository {
       },
       include: {
         sender: true,
+        parent: {
+          include: {
+            sender: true,
+          },
+        },
       },
     });
   }
@@ -69,21 +80,24 @@ export class MessagesRepository {
     });
   }
 
-  async updateMessage(
-    data: UpdateMessageDto,
-    senderId: string,
-  ): Promise<MessageWithSender> {
+  async updateMessage(data: UpdateMessageDto): Promise<MessageWithSender> {
     return this.prismaService.message.update({
       where: {
         id: data.messageId,
-        senderId: senderId,
+        senderId: data.senderId,
         roomId: data.roomId,
       },
       data: {
         content: data.content,
+        parentId: data.parentId,
       },
       include: {
         sender: true,
+        parent: {
+          include: {
+            sender: true,
+          },
+        },
       },
     });
   }
@@ -107,6 +121,11 @@ export class MessagesRepository {
       },
       include: {
         sender: true,
+        parent: {
+          include: {
+            sender: true,
+          },
+        },
       },
     });
   }

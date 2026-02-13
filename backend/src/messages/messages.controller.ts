@@ -84,13 +84,11 @@ export class MessagesController {
     const updateData: UpdateMessageDto = {
       roomId,
       messageId,
+      senderId: session.user.id,
       ...body,
     };
 
-    const message = await this.messagesService.updateMessage(
-      updateData,
-      session.user.id,
-    );
+    const message = await this.messagesService.updateMessage(updateData);
 
     return { data: message, message: 'Message updated sucessfully' };
   }
