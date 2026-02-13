@@ -3,11 +3,14 @@ import z from 'zod';
 export const createMessageSchema = z.object({
   roomId: z.string(),
   content: z.string().max(2000),
+  parentId: z.string().optional(),
+  senderId: z.string(),
 });
 
 //for controller
 export const createMessageBodySchema = createMessageSchema.omit({
   roomId: true,
+  senderId: true,
 });
 
 export const updateMessageSchema = createMessageSchema.extend({
@@ -18,6 +21,7 @@ export const updateMessageSchema = createMessageSchema.extend({
 export const updateMessageBodySchema = updateMessageSchema.omit({
   roomId: true,
   messageId: true,
+  senderId: true,
 });
 
 export const getMessagesSchema = z.object({
