@@ -1,13 +1,13 @@
 import { X, Edit, Reply } from "lucide-react";
 
-interface EditIndicatorProps {
+interface MessageIndicatorProps {
   mode: "edit" | "reply";
   text: string;
   senderName?: string;
   onCancel: () => void;
 }
 
-export function EditIndicator({ mode, text, senderName, onCancel }: EditIndicatorProps) {
+export function MessageIndicator({ mode, text, senderName, onCancel }: MessageIndicatorProps) {
   return (
     <div className="flex items-start justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
       <div className="flex items-start gap-2 flex-1 min-w-0">
