@@ -42,14 +42,20 @@ interface UseMessageMutationsProps {
   roomId?: string;
   session: any;
   form?: UseFormReturn<any>;
-  editingMessage?: { id: string; content: string } | null;
+  messageAction?: {
+    mode: "edit" | "reply";
+    id: string;
+    content: string;
+    senderName?: string;
+    parentMessage?: MessageWithSender;
+  } | null;
 }
 
 export function useMessageMutations({
   roomId,
   session,
   form,
-  editingMessage,
+  messageAction,
 }: UseMessageMutationsProps) {
   const queryClient = useQueryClient();
 
@@ -58,6 +64,9 @@ export function useMessageMutations({
     onMutate: async (newMessage) => {
       await queryClient.cancelQueries({ queryKey: ["messages", roomId, 20] });
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
+
+      const parentMessage =
+        messageAction?.mode === "reply" ? messageAction.parentMessage : null;
 
       const optimisticMessage = {
         id: `temp-${Date.now()}`,
@@ -69,6 +78,8 @@ export function useMessageMutations({
         isPending: true,
         deletedAt: null,
         updatedAt: null,
+        parentId: newMessage.parentId ?? null,
+        parent: parentMessage ?? null,
       };
 
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
@@ -89,6 +100,7 @@ export function useMessageMutations({
             roomId: roomId!,
             updatedAt: optimisticMessage.updatedAt,
             deletedAt: optimisticMessage.deletedAt,
+            parentId: optimisticMessage.parentId,
           });
         }
       );
@@ -127,6 +139,7 @@ export function useMessageMutations({
             roomId: roomId!,
             updatedAt: null,
             deletedAt: null,
+            parentId: savedMessage!.data.parentId ?? null,
           });
         }
       );
@@ -186,7 +199,7 @@ export function useMessageMutations({
         }
       }
 
-      return { previousContent: editingMessage?.content };
+      return { previousContent: messageAction?.content };
     },
     onSuccess: (savedMessage) => {
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
