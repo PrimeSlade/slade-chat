@@ -11,13 +11,14 @@ import {
 const createMessage = async ({
   roomId,
   content,
+  parentId,
 }: CreateMessageDto): Promise<
   ResponseFormat<MessageWithSender> | undefined
 > => {
   try {
     const { data } = await axiosInstance.post<
       ResponseFormat<MessageWithSender>
-    >(`/messages/room/${roomId}`, { content });
+    >(`/messages/room/${roomId}`, { content, parentId });
     return data;
   } catch (error: any) {
     console.log(error.response.data);
