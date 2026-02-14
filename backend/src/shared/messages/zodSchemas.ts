@@ -19,6 +19,7 @@ export const updateMessageSchema = createMessageSchema.extend({
 export const updateMessageBodySchema = updateMessageSchema.omit({
   roomId: true,
   messageId: true,
+  parentId: true,
 });
 
 export const getMessagesSchema = z.object({

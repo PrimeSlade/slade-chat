@@ -80,7 +80,9 @@ export class MessagesRepository {
     });
   }
 
-  async updateMessage(data: UpdateMessageDto & { senderId: string; messageId: string }): Promise<MessageWithSender> {
+  async updateMessage(
+    data: UpdateMessageDto & { senderId: string; messageId: string },
+  ): Promise<MessageWithSender> {
     return this.prismaService.message.update({
       where: {
         id: data.messageId,
@@ -89,7 +91,6 @@ export class MessagesRepository {
       },
       data: {
         content: data.content,
-        parentId: data.parentId,
       },
       include: {
         sender: true,
