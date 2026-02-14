@@ -273,8 +273,6 @@ export function useMessageMutations({
           new Date().toISOString()
         );
 
-        console.log(updated);
-
         // Also update any child messages that reference this as parent ,0(N)
         return {
           ...updated,

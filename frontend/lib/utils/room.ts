@@ -16,13 +16,16 @@ type RoomLike = {
 
 export type { RoomLike };
 
-export const getRoomDisplay = (room: RoomLike) => {
+export const getRoomDisplay = (room: RoomLike, currentUserId?: string) => {
   if (!room) {
     return { displayName: "Unknown", avatarUrl: getInitials("Un") };
   }
 
   if (room.type === "DIRECT") {
-    const otherParticipant = room.participants[0];
+    const otherParticipant = room.participants.find(
+      (p) => p.user.id !== currentUserId
+    )!;
+
     return {
       displayUserId: otherParticipant.user.id,
       displayName: otherParticipant.user.name ?? "Unknown",
@@ -33,7 +36,6 @@ export const getRoomDisplay = (room: RoomLike) => {
   }
 
   return {
-    displayUserId: null,
     displayName: room.name ?? "Unnamed Room",
     avatarUrl: room.image ?? getInitials(room.name ?? "Ar"),
   };

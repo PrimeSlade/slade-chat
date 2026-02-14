@@ -47,7 +47,7 @@ export function ChatWindow({
 
   // Unified state for edit and reply actions
   const [messageAction, setMessageAction] = useState<{
-    mode: 'edit' | 'reply';
+    mode: "edit" | "reply";
     id: string;
     content: string;
     senderName?: string;
@@ -230,7 +230,7 @@ export function ChatWindow({
           displayName: ghostUser.data.name,
           avatarUrl: ghostUser.data.image ?? getInitials(ghostUser.data.name),
         }
-      : getRoomDisplay(roomData?.data.room!);
+      : getRoomDisplay(roomData?.data.room!, session!.user.id);
 
   return (
     <div className="flex h-screen flex-col">
