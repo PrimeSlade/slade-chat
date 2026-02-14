@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useSocket } from "@/hooks/use-socket";
-import { EditIndicator } from "../ui/edit-indicator";
+import { MessageIndicator } from "./message-indicator";
 import { useSession } from "@/lib/auth-client";
 import { useMessageMutations } from "@/hooks/use-messages";
 
@@ -20,7 +20,13 @@ interface ChatInputProps {
   userId?: string;
   roomId?: string;
   editingMessage?: { id: string; content: string } | null;
+  replyingToMessage?: {
+    id: string;
+    content: string;
+    senderName: string;
+  } | null;
   onCancelEdit?: () => void;
+  onCancelReply?: () => void;
 }
 
 const FormSchema = z.object({
@@ -34,7 +40,9 @@ export default function ChatInput({
   userId,
   roomId,
   editingMessage,
+  replyingToMessage,
   onCancelEdit,
+  onCancelReply,
 }: ChatInputProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -95,13 +103,21 @@ export default function ChatInput({
         inputRef.current?.focus();
       }, 0);
     }
-  }, [editingMessage, form]);
 
-  const handleCancelEdit = () => {
-    if (onCancelEdit) {
-      onCancelEdit();
+    if (replyingToMessage) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
-    form.setValue("message", "");
+  }, [editingMessage, replyingToMessage, form]);
+
+  const handleCancel = () => {
+    if (editingMessage && onCancelEdit) {
+      onCancelEdit();
+      form.reset();
+    } else if (replyingToMessage && onCancelReply) {
+      onCancelReply();
+    }
   };
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
@@ -119,23 +135,39 @@ export default function ChatInput({
       if (onCancelEdit) {
         onCancelEdit();
       }
-      form.reset();
-      return;
     }
 
     if (isGhostMode && userId) {
       directRoomMutate({ content: data.message, otherId: userId });
     } else if (roomId) {
-      createMessageMutate({ roomId, content: data.message });
+      createMessageMutate({
+        roomId,
+        content: data.message,
+        parentId: replyingToMessage?.id,
+      });
+
+      // Clear reply state after sending
+      if (replyingToMessage && onCancelReply) {
+        onCancelReply();
+      }
     }
   }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
       {editingMessage && (
-        <EditIndicator
-          editText={editingMessage.content}
-          onCancel={handleCancelEdit}
+        <MessageIndicator
+          mode="edit"
+          text={editingMessage.content}
+          onCancel={handleCancel}
+        />
+      )}
+      {replyingToMessage && !editingMessage && (
+        <MessageIndicator
+          mode="reply"
+          text={replyingToMessage.content}
+          senderName={replyingToMessage.senderName}
+          onCancel={handleCancel}
         />
       )}
       <div className="flex items-center gap-2 p-4">

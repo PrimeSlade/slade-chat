@@ -18,6 +18,7 @@ interface MessageListProps {
   roomId?: string;
   onEditMessage?: (message: { id: string; content: string }) => void;
   onDeleteMessage?: (messageId: string) => void;
+  onReplyMessage?: (message: { id: string; content: string; senderName: string }) => void;
 }
 
 export function MessageList({
@@ -30,6 +31,7 @@ export function MessageList({
   roomId,
   onEditMessage,
   onDeleteMessage,
+  onReplyMessage,
 }: MessageListProps) {
   const { data: session } = useSession();
 
@@ -125,6 +127,7 @@ export function MessageList({
               participants={participants}
               onEditMessage={onEditMessage}
               onDeleteMessage={onDeleteMessage}
+              onReplyMessage={onReplyMessage}
             />
           </div>
         );

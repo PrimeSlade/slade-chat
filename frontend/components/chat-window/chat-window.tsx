@@ -51,6 +51,13 @@ export function ChatWindow({
     content: string;
   } | null>(null);
 
+  //for replying
+  const [replyingToMessage, setReplyingToMessage] = useState<{
+    id: string;
+    content: string;
+    senderName: string;
+  } | null>(null);
+
   const timeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const { data: ghostUser, isLoading: isLoadingGhostUser } = useUserById(
@@ -267,6 +274,7 @@ export function ChatWindow({
           roomId={roomId}
           onEditMessage={setEditingMessage}
           onDeleteMessage={deleteMessageMutate}
+          onReplyMessage={setReplyingToMessage}
         />
       ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -283,7 +291,9 @@ export function ChatWindow({
           userId={userId}
           roomId={roomId}
           editingMessage={editingMessage}
+          replyingToMessage={replyingToMessage}
           onCancelEdit={() => setEditingMessage(null)}
+          onCancelReply={() => setReplyingToMessage(null)}
         />
       </div>
     </div>
