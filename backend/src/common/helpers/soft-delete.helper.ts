@@ -3,17 +3,27 @@ import { MessageWithSender } from 'src/shared';
 /**
  * Helper function to transform soft-deleted messages for frontend response
  * Nullifies content field for messages that have been soft deleted
+ * Also handles nested parent messages
  */
 export function transformSoftDeletedMessage(
   message: MessageWithSender,
 ): MessageWithSender {
-  if (message.deletedAt) {
-    return {
-      ...message,
+  const transformedMessage = { ...message };
+
+  // Transform main message content if deleted
+  if (transformedMessage.deletedAt) {
+    transformedMessage.content = null;
+  }
+
+  // Transform parent content if parent exists and is deleted
+  if (transformedMessage.parent && transformedMessage.parent.deletedAt) {
+    transformedMessage.parent = {
+      ...transformedMessage.parent,
       content: null,
     };
   }
-  return message;
+
+  return transformedMessage;
 }
 
 /**
