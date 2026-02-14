@@ -13,9 +13,8 @@ interface MessageBubbleProps {
   isLast?: boolean;
   lastMessageRef?: (node: HTMLDivElement | null) => void;
   participants?: RoomWithParticipantStatus["room"]["participants"];
-  onEditMessage?: (message: { id: string; content: string }) => void;
+  onMessageAction?: (action: { mode: 'edit' | 'reply'; id: string; content: string; senderName?: string }) => void;
   onDeleteMessage?: (messageId: string) => void;
-  onReplyMessage?: (message: { id: string; content: string; senderName: string }) => void;
 }
 
 export default function MessageBubble({
@@ -25,9 +24,8 @@ export default function MessageBubble({
   isLast = false,
   lastMessageRef,
   participants = [],
-  onEditMessage,
+  onMessageAction,
   onDeleteMessage,
-  onReplyMessage,
 }: MessageBubbleProps) {
   const { data: session } = useSession();
 
@@ -59,8 +57,9 @@ export default function MessageBubble({
   };
 
   const handleReply = () => {
-    if (onReplyMessage) {
-      onReplyMessage({ 
+    if (onMessageAction) {
+      onMessageAction({ 
+        mode: 'reply',
         id: message.id, 
         content: message.content!,
         senderName: message.sender.name
@@ -69,8 +68,12 @@ export default function MessageBubble({
   };
 
   const handleEdit = () => {
-    if (onEditMessage) {
-      onEditMessage({ id: message.id, content: message.content! });
+    if (onMessageAction) {
+      onMessageAction({ 
+        mode: 'edit',
+        id: message.id, 
+        content: message.content!
+      });
     }
   };
 

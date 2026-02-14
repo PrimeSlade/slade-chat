@@ -45,17 +45,12 @@ export function ChatWindow({
 
   const [isTypingUsers, setIsTypingUsers] = useState<Set<string>>(new Set());
 
-  //for editing
-  const [editingMessage, setEditingMessage] = useState<{
+  // Unified state for edit and reply actions
+  const [messageAction, setMessageAction] = useState<{
+    mode: 'edit' | 'reply';
     id: string;
     content: string;
-  } | null>(null);
-
-  //for replying
-  const [replyingToMessage, setReplyingToMessage] = useState<{
-    id: string;
-    content: string;
-    senderName: string;
+    senderName?: string;
   } | null>(null);
 
   const timeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -272,9 +267,8 @@ export function ChatWindow({
           isTypingUsers={isTypingUsers}
           participants={roomData?.data.room?.participants}
           roomId={roomId}
-          onEditMessage={setEditingMessage}
+          onMessageAction={setMessageAction}
           onDeleteMessage={deleteMessageMutate}
-          onReplyMessage={setReplyingToMessage}
         />
       ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -290,10 +284,8 @@ export function ChatWindow({
           isGhostMode={isGhostMode}
           userId={userId}
           roomId={roomId}
-          editingMessage={editingMessage}
-          replyingToMessage={replyingToMessage}
-          onCancelEdit={() => setEditingMessage(null)}
-          onCancelReply={() => setReplyingToMessage(null)}
+          messageAction={messageAction}
+          onCancelAction={() => setMessageAction(null)}
         />
       </div>
     </div>

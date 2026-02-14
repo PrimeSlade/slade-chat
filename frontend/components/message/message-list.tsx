@@ -16,9 +16,8 @@ interface MessageListProps {
   isTypingUsers?: Set<string>;
   participants?: RoomWithParticipantStatus["room"]["participants"];
   roomId?: string;
-  onEditMessage?: (message: { id: string; content: string }) => void;
+  onMessageAction?: (action: { mode: 'edit' | 'reply'; id: string; content: string; senderName?: string }) => void;
   onDeleteMessage?: (messageId: string) => void;
-  onReplyMessage?: (message: { id: string; content: string; senderName: string }) => void;
 }
 
 export function MessageList({
@@ -29,9 +28,8 @@ export function MessageList({
   isTypingUsers,
   participants,
   roomId,
-  onEditMessage,
+  onMessageAction,
   onDeleteMessage,
-  onReplyMessage,
 }: MessageListProps) {
   const { data: session } = useSession();
 
@@ -125,9 +123,8 @@ export function MessageList({
               isLast={isLast}
               lastMessageRef={lastMessageRef}
               participants={participants}
-              onEditMessage={onEditMessage}
+              onMessageAction={onMessageAction}
               onDeleteMessage={onDeleteMessage}
-              onReplyMessage={onReplyMessage}
             />
           </div>
         );
