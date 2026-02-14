@@ -68,7 +68,6 @@ export default function ChatInput({
   const { createMessageMutate, updateMessageMutate } = useMessageMutations({
     roomId,
     session,
-    form,
     messageAction,
   });
 
@@ -81,13 +80,9 @@ export default function ChatInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (
-      !messageValue ||
-      !roomId ||
-      !session?.user.id ||
-      messageAction?.mode === "edit"
-    )
-      return;
+    if (messageAction?.mode === "edit") return;
+
+    if (!messageValue || !roomId || !session?.user.id) return;
 
     const now = Date.now();
 
@@ -133,14 +128,10 @@ export default function ChatInput({
           content: data.message,
         });
       }
-      // Clear state
       if (onCancelAction) {
         onCancelAction();
       }
-      return;
-    }
-
-    if (isGhostMode && userId) {
+    } else if (isGhostMode && userId) {
       directRoomMutate({ content: data.message, otherId: userId });
     } else if (roomId) {
       createMessageMutate({
@@ -150,11 +141,12 @@ export default function ChatInput({
           messageAction?.mode === "reply" ? messageAction.id : undefined,
       });
 
-      // Clear reply state after sending
       if (messageAction?.mode === "reply" && onCancelAction) {
         onCancelAction();
       }
     }
+
+    form.reset();
   }
 
   return (

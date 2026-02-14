@@ -23,7 +23,6 @@ import {
   RoomParticipantWithRoom,
   MessageWithSender,
 } from "@backend/shared/index";
-import { UseFormReturn } from "react-hook-form";
 
 type UseMessagesProps = Omit<GetMessagesDto, "cursor">;
 
@@ -41,7 +40,6 @@ export function useMessages({ roomId, limit = 20 }: UseMessagesProps) {
 interface UseMessageMutationsProps {
   roomId?: string;
   session: any;
-  form?: UseFormReturn<any>;
   messageAction?: {
     mode: "edit" | "reply";
     id: string;
@@ -54,7 +52,6 @@ interface UseMessageMutationsProps {
 export function useMessageMutations({
   roomId,
   session,
-  form,
   messageAction,
 }: UseMessageMutationsProps) {
   const queryClient = useQueryClient();
@@ -105,8 +102,6 @@ export function useMessageMutations({
         }
       );
 
-      form?.reset();
-
       return { optimisticMessage };
     },
     onSuccess: (savedMessage, newContent, context) => {
@@ -143,8 +138,6 @@ export function useMessageMutations({
           });
         }
       );
-
-      form?.reset();
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
@@ -199,8 +192,6 @@ export function useMessageMutations({
         }
       }
 
-      form?.reset();
-
       return { previousContent: messageAction?.content };
     },
     onSuccess: (savedMessage) => {
@@ -236,8 +227,6 @@ export function useMessageMutations({
           }
         );
       }
-
-      form?.reset();
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
