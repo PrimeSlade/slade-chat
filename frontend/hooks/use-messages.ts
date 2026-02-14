@@ -265,13 +265,36 @@ export function useMessageMutations({
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         if (!oldData) return oldData;
 
-        return updateMessageInPages(
+        const updated = updateMessageInPages(
           oldData,
           messageId,
           null,
           new Date().toISOString(),
           new Date().toISOString()
         );
+
+        console.log(updated);
+
+        // Also update any child messages that reference this as parent ,0(N)
+        return {
+          ...updated,
+          pages: updated.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((msg: any) => {
+              if (msg.parentId === messageId && msg.parent) {
+                return {
+                  ...msg,
+                  parent: {
+                    ...msg.parent,
+                    content: null,
+                    deletedAt: new Date().toISOString(),
+                  },
+                };
+              }
+              return msg;
+            }),
+          })),
+        };
       });
 
       // Update rooms list if this is the latest message
@@ -300,13 +323,35 @@ export function useMessageMutations({
         queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
           if (!oldData) return oldData;
 
-          return updateMessageInPages(
+          const updated = updateMessageInPages(
             oldData,
             messageId,
             null,
             response.data.updatedAt!,
             response.data.deletedAt
           );
+
+          // Also update any child messages that reference this as parent
+          return {
+            ...updated,
+            pages: updated.pages.map((page: any) => ({
+              ...page,
+              data: page.data.map((msg: any) => {
+                if (msg.parentId === messageId && msg.parent) {
+                  return {
+                    ...msg,
+                    parent: {
+                      ...msg.parent,
+                      content: null,
+                      deletedAt: response.data.deletedAt,
+                      updatedAt: response.data.updatedAt,
+                    },
+                  };
+                }
+                return msg;
+              }),
+            })),
+          };
         });
 
         // Check if deleted message was the latest one
