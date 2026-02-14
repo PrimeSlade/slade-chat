@@ -199,6 +199,8 @@ export function useMessageMutations({
         }
       }
 
+      form?.reset();
+
       return { previousContent: messageAction?.content };
     },
     onSuccess: (savedMessage) => {
@@ -234,6 +236,8 @@ export function useMessageMutations({
           }
         );
       }
+
+      form?.reset();
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", roomId, 20] });
