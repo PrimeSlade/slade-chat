@@ -15,6 +15,7 @@ interface MessageBubbleProps {
   participants?: RoomWithParticipantStatus["room"]["participants"];
   onEditMessage?: (message: { id: string; content: string }) => void;
   onDeleteMessage?: (messageId: string) => void;
+  onReplyMessage?: (message: { id: string; content: string; senderName: string }) => void;
 }
 
 export default function MessageBubble({
@@ -26,14 +27,25 @@ export default function MessageBubble({
   participants = [],
   onEditMessage,
   onDeleteMessage,
+  onReplyMessage,
 }: MessageBubbleProps) {
   const { data: session } = useSession();
 
+  // Computed values
   const isDeleted = message.deletedAt !== null || message.content === null;
+  const isEdited =
+    !isDeleted &&
+    message.updatedAt &&
+    new Date(message.updatedAt).getTime() >
+      new Date(message.createdAt).getTime();
+  const cornerClass = isMine ? "rounded-br-none" : "rounded-bl-none";
+  const replySenderName =
+    message.parent?.sender.id === session?.user?.id
+      ? "You"
+      : message.parent?.sender.name;
 
   const getUsersWhoSeen = () => {
     if (!participants || !session?.user?.id) return [];
-
     return participants.filter(
       (participant) =>
         participant.userId !== session.user.id &&
@@ -47,8 +59,13 @@ export default function MessageBubble({
   };
 
   const handleReply = () => {
-    console.log("Reply to message:", message.id);
-    // TODO: Implement reply functionality
+    if (onReplyMessage) {
+      onReplyMessage({ 
+        id: message.id, 
+        content: message.content!,
+        senderName: message.sender.name
+      });
+    }
   };
 
   const handleEdit = () => {
@@ -108,24 +125,23 @@ export default function MessageBubble({
                     isMine ? "text-gray-400" : "text-gray-600"
                   )}
                 >
-                  {message.parent.sender.id === session?.user?.id 
-                    ? "You" 
-                    : message.parent.sender.name}
+                  {replySenderName}
                 </span>
               </div>
 
               {/* Reply bubble content - Same size as main bubble */}
               <div
                 className={cn(
-                  "px-4 pt-2 pb-4 rounded-2xl",
+                  "px-4 pt-2 pb-4 rounded-2xl text-sm",
                   isMine
-                    ? "bg-gray-800 border-gray-600 text-gray-300 rounded-br-none"
-                    : "bg-gray-200 border-gray-500 text-gray-700 rounded-bl-none"
+                    ? "bg-gray-800 border-gray-600 text-gray-300"
+                    : "bg-gray-200 border-gray-500 text-gray-700",
+                  cornerClass
                 )}
               >
                 <p
                   className={cn(
-                    "line-clamp-2",
+                    "line-clamp-2 ",
                     message.parent.deletedAt && "italic opacity-60"
                   )}
                 >
@@ -141,58 +157,43 @@ export default function MessageBubble({
           <div
             className={cn(
               "px-4 py-2 text-sm rounded-2xl shadow-md cursor-pointer transition-all hover:shadow-lg",
-              message.parent && "-mt-3", // Overlap the reply bubble
-              isMine
-                ? "bg-black text-white rounded-br-none"
-                : "bg-gray-100 text-gray-900 rounded-bl-none",
-              isDeleted && "opacity-70"
+              message.parent && "-mt-3",
+              isMine ? "bg-black text-white" : "bg-gray-100 text-gray-900",
+              cornerClass
             )}
           >
             <p className={cn(isDeleted && "italic text-gray-400")}>
               {isDeleted ? "Message deleted" : message.content}
             </p>
-            {
-              <span
-                className={cn(
-                  "text-[10px] mt-1 flex items-center gap-1",
-                  isMine
-                    ? "text-blue-100 justify-end"
-                    : "text-gray-400 justify-start"
-                )}
-              >
-                {isMine &&
-                  !isDeleted &&
-                  message.updatedAt &&
-                  new Date(message.updatedAt).getTime() >
-                    new Date(message.createdAt).getTime() && (
-                    <span>edited</span>
+
+            {/* Metadata: timestamp + edited + checkmarks */}
+            <span
+              className={cn(
+                "text-[10px] mt-1 flex items-center gap-1",
+                isMine
+                  ? "text-blue-100 justify-end"
+                  : "text-gray-400 justify-start"
+              )}
+            >
+              {isMine && isEdited && <span>edited</span>}
+              {format(new Date(message.createdAt), "HH:mm")}
+              {!isMine && isEdited && <span>edited</span>}
+              {isMine && (
+                <span className="inline-flex -space-x-1">
+                  {message.isPending ? (
+                    <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                  ) : (
+                    <CheckCheck
+                      className={cn(
+                        "w-3.5 h-3.5",
+                        isSeenByOthers() && "text-(--primary-color)"
+                      )}
+                      strokeWidth={2.5}
+                    />
                   )}
-                {format(new Date(message.createdAt), "HH:mm")}
-                {!isMine &&
-                  !isDeleted &&
-                  message.updatedAt &&
-                  new Date(message.updatedAt).getTime() >
-                    new Date(message.createdAt).getTime() && (
-                    <span>edited</span>
-                  )}
-                {isMine && (
-                  <span className="inline-flex -space-x-1">
-                    {message.isPending ? (
-                      <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
-                    ) : (
-                      // Double tick for sent, green if seen by others
-                      <CheckCheck
-                        className={cn(
-                          "w-3.5 h-3.5",
-                          isSeenByOthers() && "text-(--primary-color)"
-                        )}
-                        strokeWidth={2.5}
-                      />
-                    )}
-                  </span>
-                )}
-              </span>
-            }
+                </span>
+              )}
+            </span>
           </div>
         </div>
       </MessageActionsDropdown>
