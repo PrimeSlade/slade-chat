@@ -14,6 +14,7 @@ import { useSocket } from "@/hooks/use-socket";
 import { MessageIndicator } from "./message-indicator";
 import { useSession } from "@/lib/auth-client";
 import { useMessageMutations } from "@/hooks/use-messages";
+import { MessageWithSender } from "@backend/shared";
 
 interface ChatInputProps {
   isGhostMode?: boolean;
@@ -24,6 +25,7 @@ interface ChatInputProps {
     id: string;
     content: string;
     senderName?: string;
+    parentMessage?: MessageWithSender;
   } | null;
   onCancelAction?: () => void;
 }
@@ -67,7 +69,7 @@ export default function ChatInput({
     roomId,
     session,
     form,
-    editingMessage: messageAction?.mode === "edit" ? messageAction : null,
+    messageAction,
   });
 
   const messageValue = form.watch("message");
@@ -135,6 +137,7 @@ export default function ChatInput({
       if (onCancelAction) {
         onCancelAction();
       }
+      return;
     }
 
     if (isGhostMode && userId) {

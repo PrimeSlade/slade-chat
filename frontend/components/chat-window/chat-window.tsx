@@ -51,6 +51,7 @@ export function ChatWindow({
     id: string;
     content: string;
     senderName?: string;
+    parentMessage?: MessageWithSender;
   } | null>(null);
 
   const timeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});

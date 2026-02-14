@@ -13,7 +13,13 @@ interface MessageBubbleProps {
   isLast?: boolean;
   lastMessageRef?: (node: HTMLDivElement | null) => void;
   participants?: RoomWithParticipantStatus["room"]["participants"];
-  onMessageAction?: (action: { mode: 'edit' | 'reply'; id: string; content: string; senderName?: string }) => void;
+  onMessageAction?: (action: {
+    mode: "edit" | "reply";
+    id: string;
+    content: string;
+    senderName?: string;
+    parentMessage?: MessageWithSender;
+  }) => void;
   onDeleteMessage?: (messageId: string) => void;
 }
 
@@ -58,21 +64,22 @@ export default function MessageBubble({
 
   const handleReply = () => {
     if (onMessageAction) {
-      onMessageAction({ 
-        mode: 'reply',
-        id: message.id, 
+      onMessageAction({
+        mode: "reply",
+        id: message.id,
         content: message.content!,
-        senderName: message.sender.name
+        senderName: message.sender.name,
+        parentMessage: message, // Pass the full message object
       });
     }
   };
 
   const handleEdit = () => {
     if (onMessageAction) {
-      onMessageAction({ 
-        mode: 'edit',
-        id: message.id, 
-        content: message.content!
+      onMessageAction({
+        mode: "edit",
+        id: message.id,
+        content: message.content!,
       });
     }
   };

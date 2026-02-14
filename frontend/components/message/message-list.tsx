@@ -16,7 +16,13 @@ interface MessageListProps {
   isTypingUsers?: Set<string>;
   participants?: RoomWithParticipantStatus["room"]["participants"];
   roomId?: string;
-  onMessageAction?: (action: { mode: 'edit' | 'reply'; id: string; content: string; senderName?: string }) => void;
+  onMessageAction?: (action: { 
+    mode: 'edit' | 'reply'; 
+    id: string; 
+    content: string; 
+    senderName?: string;
+    parentMessage?: MessageWithSender;
+  }) => void;
   onDeleteMessage?: (messageId: string) => void;
 }
 
