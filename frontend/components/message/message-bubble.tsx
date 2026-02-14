@@ -1,7 +1,7 @@
 import { cn, getInitials } from "@/lib/utils"; // shadcn helper for classes
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday } from "date-fns";
-import { Check, CheckCheck } from "lucide-react";
+import { Check, CheckCheck, Reply } from "lucide-react";
 import { MessageActionsDropdown } from "./message-actions-dropdown";
 import { MessageWithSender, RoomWithParticipantStatus } from "@backend/shared";
 import { useSession } from "@/lib/auth-client";
@@ -13,7 +13,13 @@ interface MessageBubbleProps {
   isLast?: boolean;
   lastMessageRef?: (node: HTMLDivElement | null) => void;
   participants?: RoomWithParticipantStatus["room"]["participants"];
-  onEditMessage?: (message: { id: string; content: string }) => void;
+  onMessageAction?: (action: {
+    mode: "edit" | "reply";
+    id: string;
+    content: string;
+    senderName?: string;
+    parentMessage?: MessageWithSender;
+  }) => void;
   onDeleteMessage?: (messageId: string) => void;
 }
 
@@ -24,16 +30,26 @@ export default function MessageBubble({
   isLast = false,
   lastMessageRef,
   participants = [],
-  onEditMessage,
+  onMessageAction,
   onDeleteMessage,
 }: MessageBubbleProps) {
   const { data: session } = useSession();
 
+  // Computed values
   const isDeleted = message.deletedAt !== null || message.content === null;
+  const isEdited =
+    !isDeleted &&
+    message.updatedAt &&
+    new Date(message.updatedAt).getTime() >
+      new Date(message.createdAt).getTime();
+  const cornerClass = isMine ? "rounded-br-none" : "rounded-bl-none";
+  const replySenderName =
+    message.parent?.sender.id === session?.user?.id
+      ? "You"
+      : message.parent?.sender.name;
 
   const getUsersWhoSeen = () => {
     if (!participants || !session?.user?.id) return [];
-
     return participants.filter(
       (participant) =>
         participant.userId !== session.user.id &&
@@ -47,13 +63,24 @@ export default function MessageBubble({
   };
 
   const handleReply = () => {
-    console.log("Reply to message:", message.id);
-    // TODO: Implement reply functionality
+    if (onMessageAction) {
+      onMessageAction({
+        mode: "reply",
+        id: message.id,
+        content: message.content!,
+        senderName: message.sender.name,
+        parentMessage: message, // Pass the full message object
+      });
+    }
   };
 
   const handleEdit = () => {
-    if (onEditMessage) {
-      onEditMessage({ id: message.id, content: message.content! });
+    if (onMessageAction) {
+      onMessageAction({
+        mode: "edit",
+        id: message.id,
+        content: message.content!,
+      });
     }
   };
 
@@ -87,7 +114,7 @@ export default function MessageBubble({
         </div>
       )}
 
-      {/* THE BUBBLE ITSELF */}
+      {/* OVERLAPPING BUBBLES */}
       <MessageActionsDropdown
         isMine={isMine}
         seenUsers={getUsersWhoSeen()}
@@ -95,19 +122,61 @@ export default function MessageBubble({
         onEdit={isMine && !isDeleted ? handleEdit : undefined}
         onDelete={isMine && !isDeleted ? handleDelete : undefined}
       >
-        <div
-          className={cn(
-            "max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm cursor-pointer transition-all hover:shadow-md",
-            isMine
-              ? "bg-black text-white rounded-br-none " // My Style
-              : "bg-gray-100 text-gray-900 rounded-bl-none", // Their Style
-            isDeleted && "opacity-70"
+        <div className="flex flex-col max-w-[70%]">
+          {/* Reply Bubble - Behind */}
+          {message.parent && (
+            <div className="flex flex-col">
+              {/* Reply info - Outside the bubble */}
+              <div className="flex items-center gap-1 mb-1 px-1">
+                <Reply className="w-3 h-3 text-gray-500" />
+                <span
+                  className={cn(
+                    "text-[11px] font-semibold",
+                    isMine ? "text-gray-400" : "text-gray-600"
+                  )}
+                >
+                  {replySenderName}
+                </span>
+              </div>
+
+              {/* Reply bubble content - Same size as main bubble */}
+              <div
+                className={cn(
+                  "px-4 pt-2 pb-4 rounded-2xl text-sm",
+                  isMine
+                    ? "bg-gray-800 border-gray-600 text-gray-300"
+                    : "bg-gray-200 border-gray-500 text-gray-700",
+                  cornerClass
+                )}
+              >
+                <p
+                  className={cn(
+                    "line-clamp-2 ",
+                    message.parent.deletedAt && "italic opacity-60"
+                  )}
+                >
+                  {message.parent.deletedAt || !message.parent.content
+                    ? "Message deleted"
+                    : message.parent.content}
+                </p>
+              </div>
+            </div>
           )}
-        >
-          <p className={cn(isDeleted && "italic text-gray-400")}>
-            {isDeleted ? "Message deleted" : message.content}
-          </p>
-          {
+
+          {/* Main Message Bubble - Overlapping on top */}
+          <div
+            className={cn(
+              "px-4 py-2 text-sm rounded-2xl shadow-md cursor-pointer transition-all hover:shadow-lg",
+              message.parent && "-mt-3",
+              isMine ? "bg-black text-white" : "bg-gray-100 text-gray-900",
+              cornerClass
+            )}
+          >
+            <p className={cn(isDeleted && "italic text-gray-400")}>
+              {isDeleted ? "Message deleted" : message.content}
+            </p>
+
+            {/* Metadata: timestamp + edited + checkmarks */}
             <span
               className={cn(
                 "text-[10px] mt-1 flex items-center gap-1",
@@ -116,23 +185,14 @@ export default function MessageBubble({
                   : "text-gray-400 justify-start"
               )}
             >
-              {isMine &&
-                !isDeleted &&
-                message.updatedAt &&
-                new Date(message.updatedAt).getTime() >
-                  new Date(message.createdAt).getTime() && <span>edited</span>}
+              {isMine && isEdited && <span>edited</span>}
               {format(new Date(message.createdAt), "HH:mm")}
-              {!isMine &&
-                !isDeleted &&
-                message.updatedAt &&
-                new Date(message.updatedAt).getTime() >
-                  new Date(message.createdAt).getTime() && <span>edited</span>}
+              {!isMine && isEdited && <span>edited</span>}
               {isMine && (
                 <span className="inline-flex -space-x-1">
                   {message.isPending ? (
                     <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                   ) : (
-                    // Double tick for sent, green if seen by others
                     <CheckCheck
                       className={cn(
                         "w-3.5 h-3.5",
@@ -144,7 +204,7 @@ export default function MessageBubble({
                 </span>
               )}
             </span>
-          }
+          </div>
         </div>
       </MessageActionsDropdown>
     </div>

@@ -11,16 +11,23 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useSocket } from "@/hooks/use-socket";
-import { EditIndicator } from "../ui/edit-indicator";
+import { MessageIndicator } from "./message-indicator";
 import { useSession } from "@/lib/auth-client";
 import { useMessageMutations } from "@/hooks/use-messages";
+import { MessageWithSender } from "@backend/shared";
 
 interface ChatInputProps {
   isGhostMode?: boolean;
   userId?: string;
   roomId?: string;
-  editingMessage?: { id: string; content: string } | null;
-  onCancelEdit?: () => void;
+  messageAction?: {
+    mode: "edit" | "reply";
+    id: string;
+    content: string;
+    senderName?: string;
+    parentMessage?: MessageWithSender;
+  } | null;
+  onCancelAction?: () => void;
 }
 
 const FormSchema = z.object({
@@ -33,8 +40,8 @@ export default function ChatInput({
   isGhostMode,
   userId,
   roomId,
-  editingMessage,
-  onCancelEdit,
+  messageAction,
+  onCancelAction,
 }: ChatInputProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -62,7 +69,7 @@ export default function ChatInput({
     roomId,
     session,
     form,
-    editingMessage,
+    messageAction,
   });
 
   const messageValue = form.watch("message");
@@ -74,7 +81,13 @@ export default function ChatInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!messageValue || !roomId || !session?.user.id || editingMessage) return;
+    if (
+      !messageValue ||
+      !roomId ||
+      !session?.user.id ||
+      messageAction?.mode === "edit"
+    )
+      return;
 
     const now = Date.now();
 
@@ -84,58 +97,74 @@ export default function ChatInput({
       // Update the timestamp
       lastTypingTime.current = now;
     }
-  }, [messageValue, roomId, session?.user.id]);
+  }, [messageValue, roomId, session?.user.id, messageAction]);
 
-  //if I click edit
+  // Handle edit or reply - set input value and focus
   useEffect(() => {
-    if (editingMessage) {
-      form.setValue("message", editingMessage.content);
-      // Focus the input after setting the value
+    if (messageAction?.mode === "edit") {
+      form.setValue("message", messageAction.content);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    } else if (messageAction?.mode === "reply") {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
     }
-  }, [editingMessage, form]);
+  }, [messageAction, form]);
 
-  const handleCancelEdit = () => {
-    if (onCancelEdit) {
-      onCancelEdit();
+  const handleCancel = () => {
+    if (onCancelAction) {
+      onCancelAction();
     }
-    form.setValue("message", "");
+    if (messageAction?.mode === "edit") {
+      form.reset();
+    }
   };
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     if (isExceeded || !data.message.trim()) return;
 
-    if (editingMessage) {
-      if (data.message.trim() !== editingMessage.content.trim()) {
+    if (messageAction?.mode === "edit") {
+      if (data.message.trim() !== messageAction.content.trim()) {
         updateMessageMutate({
           roomId: roomId!,
-          messageId: editingMessage.id,
+          messageId: messageAction.id,
           content: data.message,
         });
       }
-      //clear state
-      if (onCancelEdit) {
-        onCancelEdit();
+      // Clear state
+      if (onCancelAction) {
+        onCancelAction();
       }
-      form.reset();
       return;
     }
 
     if (isGhostMode && userId) {
       directRoomMutate({ content: data.message, otherId: userId });
     } else if (roomId) {
-      createMessageMutate({ roomId, content: data.message });
+      createMessageMutate({
+        roomId,
+        content: data.message,
+        parentId:
+          messageAction?.mode === "reply" ? messageAction.id : undefined,
+      });
+
+      // Clear reply state after sending
+      if (messageAction?.mode === "reply" && onCancelAction) {
+        onCancelAction();
+      }
     }
   }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-      {editingMessage && (
-        <EditIndicator
-          editText={editingMessage.content}
-          onCancel={handleCancelEdit}
+      {messageAction && (
+        <MessageIndicator
+          mode={messageAction.mode}
+          text={messageAction.content}
+          senderName={messageAction.senderName}
+          onCancel={handleCancel}
         />
       )}
       <div className="flex items-center gap-2 p-4">

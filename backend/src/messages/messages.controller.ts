@@ -81,16 +81,14 @@ export class MessagesController {
     body: UpdateMessageBodyDto,
     @Session() session: UserSession,
   ): Promise<ControllerResponse<MessageWithSender>> {
-    const updateData: UpdateMessageDto = {
+    const updateData: UpdateMessageDto & { senderId: string } = {
       roomId,
       messageId,
+      senderId: session.user.id,
       ...body,
     };
 
-    const message = await this.messagesService.updateMessage(
-      updateData,
-      session.user.id,
-    );
+    const message = await this.messagesService.updateMessage(updateData);
 
     return { data: message, message: 'Message updated sucessfully' };
   }

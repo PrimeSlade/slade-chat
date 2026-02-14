@@ -136,17 +136,22 @@ model RoomParticipant {
 }
 
 model Message {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   content   String?   @db.Text
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
-  deletedAt DateTime?   
+  deletedAt DateTime?
 
   senderId String
   sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   roomId String
   room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   Message? @relation("MessageReplies", fields: [parentId], references: [id], onDelete: SetNull)
+
+  children Message[] @relation("MessageReplies")
 
   @@index([roomId, createdAt])
   @@map("message")

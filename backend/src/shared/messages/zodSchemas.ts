@@ -3,6 +3,7 @@ import z from 'zod';
 export const createMessageSchema = z.object({
   roomId: z.string(),
   content: z.string().max(2000),
+  parentId: z.string().optional(),
 });
 
 //for controller
@@ -18,6 +19,7 @@ export const updateMessageSchema = createMessageSchema.extend({
 export const updateMessageBodySchema = updateMessageSchema.omit({
   roomId: true,
   messageId: true,
+  parentId: true,
 });
 
 export const getMessagesSchema = z.object({
