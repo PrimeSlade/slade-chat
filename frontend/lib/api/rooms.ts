@@ -6,6 +6,9 @@ import {
   RoomParticipantWithRoomByRoomId,
   Room,
   RoomWithParticipantStatus,
+  InviteCandidateUser,
+  AddRoomMembersResult,
+  AddRoomMembersDto,
 } from "@backend/shared";
 
 const getRooms = async (): Promise<
@@ -82,10 +85,44 @@ const createGroupRoom = async (inputData: {
   }
 };
 
+const getInviteCandidates = async (
+  roomId: string
+): Promise<ResponseFormat<InviteCandidateUser[]> | undefined> => {
+  try {
+    const { data } = await axiosInstance.get<ResponseFormat<InviteCandidateUser[]>>(
+      `/rooms/${roomId}/invite-candidates`
+    );
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
+const addRoomMembers = async (inputData: {
+  roomId: string;
+  memberIds: AddRoomMembersDto["memberIds"];
+}): Promise<ResponseFormat<AddRoomMembersResult> | undefined> => {
+  try {
+    const { data } = await axiosInstance.post<ResponseFormat<AddRoomMembersResult>>(
+      `/rooms/${inputData.roomId}/members`,
+      {
+        memberIds: inputData.memberIds,
+      }
+    );
+    return data;
+  } catch (error: any) {
+    console.log(error.response.data);
+    throw new Error(error.response.data.message);
+  }
+};
+
 export {
   getRooms,
   getRoomByUserId,
   getMyRoomByRoomId,
   createDirectRoom,
   createGroupRoom,
+  getInviteCandidates,
+  addRoomMembers,
 };

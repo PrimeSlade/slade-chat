@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useFriends } from "@/hooks/use-friends";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createGroupRoom } from "@/lib/api/rooms";
+import { addRoomMembers, createGroupRoom } from "@/lib/api/rooms";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Users } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { chooseFriends } from "@/lib/hanldeFriends";
+import { useInviteCandidates } from "@/hooks/use-rooms";
 import { getInitials } from "@/lib/utils";
 
 interface GroupMembersDialogProps {
@@ -38,6 +39,9 @@ export function GroupMembersDialog({
   const queryClient = useQueryClient();
 
   const { data: friendsData } = useFriends();
+  const { data: inviteCandidatesData } = useInviteCandidates(
+    isInviteMode ? roomId : undefined
+  );
   const { data: session } = useSession();
 
   const friends =
@@ -69,15 +73,17 @@ export function GroupMembersDialog({
     },
   });
 
-  // TODO: Add invite members mutation
   const { mutate: inviteMembers, isPending: isInviting } = useMutation({
-    mutationFn: async (data: { roomId: string; memberIds: string[] }) => {
-      // Add your invite members API call here
-      throw new Error("Not implemented");
-    },
+    mutationFn: addRoomMembers,
     onSuccess: () => {
       onOpenChange(false);
       setSelectedFriends(new Set());
+      if (roomId) {
+        queryClient.invalidateQueries({ queryKey: ["room", "me", roomId] });
+        queryClient.invalidateQueries({
+          queryKey: ["room", roomId, "invite-candidates"],
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
     },
     onError: (error) => {
@@ -87,10 +93,13 @@ export function GroupMembersDialog({
 
   const isPending = isCreating || isInviting;
 
-  const filteredFriends = friends.filter(
-    (friend) =>
-      friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.username?.toLowerCase().includes(searchQuery.toLowerCase())
+  const inviteCandidates = inviteCandidatesData?.data ?? [];
+  const selectableUsers = isInviteMode ? inviteCandidates : friends;
+
+  const filteredFriends = selectableUsers.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const toggleFriend = (friendId: string) => {
