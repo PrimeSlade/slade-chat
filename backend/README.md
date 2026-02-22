@@ -57,6 +57,19 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
+## Docker Compose
+
+```bash
+# Development stack (Dockerfile + docker-compose.yml)
+$ docker compose up --build
+
+# Test stack (Dockerfile.test + docker-compose.test.yml)
+$ docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+```
+
+- Development stack uses `.env` and `DATABASE_URL`.
+- Test stack uses `.env.test`, starts `test-db`, and maps `DATABASE_URL_TEST` to `DATABASE_URL` before running Prisma migrations and tests.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
