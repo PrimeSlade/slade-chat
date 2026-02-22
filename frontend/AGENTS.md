@@ -3,7 +3,7 @@
 Role: You are a Senior Frontend Engineer specializing in Next.js and TypeScript.
 Constraint: You must strictly adhere to the "Integration Patterns" defined below.
 Critical Rule: All Data Fetching (GET) must follow the `API → Hook → App` pattern.
-Critical Rule: All Mutations (POST/PUT/DELETE) must follow the `API → App` pattern (skipping hooks).
+Critical Rule: All Mutations (POST/PUT/DELETE) must follow the `API → Hook → App` pattern by default.
 
 ## Approval Gate (Required)
 
@@ -103,9 +103,9 @@ No-write mode by default: read-only unless the user explicitly says `apply it`.
 - Implements Next.js routing and layouts
 - Composes shadcn/ui components with custom components
 
-### Exception: Mutations
+### Default: Mutations
 
-**For mutation operations (POST, PUT, DELETE), use API → App directly:**
+**For mutation operations (POST, PUT, DELETE), use API → Hook → App by default:**
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -115,17 +115,29 @@ No-write mode by default: read-only unless the user explicitly says `apply it`.
                   │
                   ▼
 ┌─────────────────────────────────────────────┐
+│ Hook Layer (hooks/)                         │
+│ - useMutation and mutation orchestration    │
+│ - Loading/error/success handling            │
+│ - Cache invalidation/update policy          │
+└─────────────────┬───────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────┐
 │ App Layer (app/, components/)               │
-│ - Direct API calls for mutations            │
-│ - Handle responses and updates              │
+│ - Trigger hook mutation handlers            │
+│ - Render mutation state                     │
 └─────────────────────────────────────────────┘
 ```
 
-**Why skip hooks for mutations?**
+**Why use hooks for mutations by default?**
 
-- Mutations are often one-time actions triggered by user events
-- Simpler to handle directly in event handlers
-- Reduces unnecessary abstraction for straightforward operations
+- Keeps request state and side effects consistent across screens
+- Centralizes invalidation/update logic for TanStack cache
+- Prevents duplicated error/loading/retry handling in UI components
+
+**Narrow exception (allowed):**
+
+- `API → App` is allowed only for trivial, one-off UI actions with no shared state or cache invalidation impact.
 
 ### Benefits of This Pattern
 
@@ -134,7 +146,7 @@ No-write mode by default: read-only unless the user explicitly says `apply it`.
 - **Testability**: Each layer can be tested independently
 - **Maintainability**: Changes in one layer minimize impact on others
 - **Type Safety**: TypeScript ensures type consistency across all layers
-- **Flexibility**: Mutations bypass hooks for simplicity
+- **Consistency**: Queries and mutations follow one primary integration model
 
 ## Project Structure
 
@@ -159,9 +171,9 @@ frontend/
 
 ### Mutations
 
-- POST, PUT, DELETE requests should go through: **API → App**
-- Call API functions directly from event handlers
-- Handle success/error states in the component
+- POST, PUT, DELETE requests should go through: **API → Hook → App** (default)
+- Use hooks to manage mutation state, retries, and invalidation/update behavior
+- Allow direct **API → App** only for trivial one-off actions with no shared cache/state effects
 
 ### Code Standards
 
