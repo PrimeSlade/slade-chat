@@ -107,4 +107,19 @@ export type RoomParticipantsByRoomId = Prisma.RoomParticipantGetPayload<{
   };
 }>;
 
+//TODO:
+export type InviteCandidateUser = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    image: true;
+    username: true;
+  };
+}>;
+
+export type AddRoomMembersResult = {
+  addedIds: string[];
+  alreadyMemberIds: string[];
+};
+
 export type { RoomParticipant } from 'generated/prisma/client';

@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Session,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Session } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 
 import { UserSession } from '@thallesp/nestjs-better-auth';
@@ -21,6 +11,10 @@ import {
   CreateGroupRoomDto,
   createGroupRoomSchema,
   RoomWithParticipantStatus,
+  InviteCandidateUser,
+  addRoomMembersSchema,
+  AddRoomMembersDto,
+  AddRoomMembersResult,
 } from 'src/shared';
 import { ZodValidationPipe } from 'src/common/pipes/zod.validation.pipe';
 import { ControllerResponse } from 'src/common/types/responce.type';
@@ -51,6 +45,37 @@ export class RoomsController {
   ) {
     const room = await this.roomsService.createGroupRoom(body, session.user.id);
     return { data: room, message: 'Group room created successfully' };
+  }
+
+  @Get(':roomId/invite-candidates')
+  async getInviteCandidates(
+    @Param('roomId') roomId: string,
+    @Session() session: UserSession,
+  ): Promise<ControllerResponse<InviteCandidateUser[]>> {
+    const candidates = await this.roomsService.getInviteCandidates(
+      roomId,
+      session.user.id,
+    );
+
+    return {
+      data: candidates,
+      message: 'Invite candidates fetched successfully',
+    };
+  }
+
+  @Post(':roomId/members')
+  async addMembers(
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(addRoomMembersSchema)) body: AddRoomMembersDto,
+    @Session() session: UserSession,
+  ): Promise<ControllerResponse<AddRoomMembersResult>> {
+    const result = await this.roomsService.addMembersToRoom(
+      roomId,
+      body,
+      session.user.id,
+    );
+
+    return { data: result, message: 'Room members added successfully' };
   }
 
   @Get('me')

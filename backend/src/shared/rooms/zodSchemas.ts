@@ -14,3 +14,9 @@ export const createGroupRoomSchema = z.object({
 });
 
 export type CreateGroupRoomDto = z.infer<typeof createGroupRoomSchema>;
+
+export const addRoomMembersSchema = z.object({
+  memberIds: z.array(z.string()).min(1),
+});
+
+export type AddRoomMembersDto = z.infer<typeof addRoomMembersSchema>;

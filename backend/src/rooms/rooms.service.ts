@@ -11,12 +11,18 @@ import {
   RoomWithParticipantStatus,
   RoomParticipantsByRoomId,
   RoomParticipant,
+  InviteCandidateUser,
+  AddRoomMembersResult,
+  AddRoomMembersDto,
 } from 'src/shared';
 import { MessagesRepository } from 'src/messages/messages.repository';
 import { PrismaService } from 'src/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { transformSoftDeletedMessage } from 'src/common/helpers/soft-delete.helper';
+import { RoomType } from 'generated/prisma/enums';
+import { UsersService } from 'src/users/users.service';
+import { extractFriendIds } from 'src/common/helpers/friendship.helper';
 
 @Injectable()
 export class RoomsService {
@@ -24,6 +30,7 @@ export class RoomsService {
     private readonly prismaService: PrismaService,
     private readonly roomsRepository: RoomsReposiory,
     private readonly messagesRepositroy: MessagesRepository,
+    private readonly usersService: UsersService,
     private readonly eventEmitter: EventEmitter2,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
@@ -151,6 +158,92 @@ export class RoomsService {
 
   async createGroupRoom(data: CreateGroupRoomDto, myId: string): Promise<Room> {
     return this.roomsRepository.createGroupRoom(data, myId);
+  }
+
+  async getInviteCandidates(
+    roomId: string,
+    myId: string,
+  ): Promise<InviteCandidateUser[]> {
+    //check existing users
+    const roomData = await this.roomsRepository.findMyRoombyRoomId(
+      myId,
+      roomId,
+    );
+
+    if (roomData.room.type !== RoomType.GROUP) {
+      throw new BadRequestException('Invite is only available for group rooms');
+    }
+
+    const participantIds = new Set(
+      roomData.room.participants.map((participant) => participant.userId),
+    );
+
+    const friendships = await this.usersService.findFriends(myId);
+    const friendIds = extractFriendIds(friendships, myId);
+
+    const eligibleIds = friendIds.filter(
+      (friendId) => !participantIds.has(friendId),
+    );
+
+    if (eligibleIds.length === 0) return [];
+
+    return this.roomsRepository.findUsersByIds(eligibleIds);
+  }
+
+  async addMembersToRoom(
+    roomId: string,
+    data: AddRoomMembersDto,
+    myId: string,
+  ): Promise<AddRoomMembersResult> {
+    const roomData = await this.roomsRepository.findMyRoombyRoomId(
+      myId,
+      roomId,
+    );
+
+    if (roomData.room.type !== RoomType.GROUP) {
+      throw new BadRequestException(
+        'Adding members is only available for group rooms',
+      );
+    }
+
+    const existingMemberIds = new Set(
+      roomData.room.participants.map((participant) => participant.userId),
+    );
+
+    //Already in room
+    const alreadyMemberIds = data.memberIds.filter((id) =>
+      existingMemberIds.has(id),
+    );
+
+    //Not in room yet
+    const candidateIds = data.memberIds.filter(
+      (id) => !existingMemberIds.has(id),
+    );
+
+    if (candidateIds.length === 0) {
+      return {
+        addedIds: [],
+        alreadyMemberIds,
+      };
+    }
+
+    const friendships = await this.usersService.findFriends(myId);
+    const friendIds = extractFriendIds(friendships, myId);
+
+    const friendIdSet = new Set(friendIds);
+    const eligibleFriendIds = candidateIds.filter((id) => friendIdSet.has(id));
+
+    if (eligibleFriendIds.length > 0) {
+      await this.roomsRepository.createRoomParticipants(
+        roomId,
+        eligibleFriendIds,
+      );
+    }
+
+    return {
+      addedIds: eligibleFriendIds,
+      alreadyMemberIds,
+    };
   }
 
   async updateLastReadAt(

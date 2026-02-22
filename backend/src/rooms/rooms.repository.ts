@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
-import { RoomType } from 'generated/prisma/enums';
+import { FriendStatus, RoomType } from 'generated/prisma/enums';
 
 import { PrismaService } from 'src/prisma.service';
 import {
@@ -12,6 +12,7 @@ import {
   RoomIdsByUserId,
   RoomParticipantsByRoomId,
   RoomParticipant,
+  InviteCandidateUser,
 } from 'src/shared';
 
 @Injectable()
@@ -144,6 +145,76 @@ export class RoomsReposiory {
       select: {
         userId: true,
       },
+    });
+  }
+
+  async findAcceptedFriendIds(
+    myId: string,
+    targetUserIds?: string[],
+  ): Promise<string[]> {
+    const friendships = await this.prismaService.friendship.findMany({
+      where: {
+        status: FriendStatus.ACCEPTED,
+        OR: [
+          {
+            senderId: myId,
+            ...(targetUserIds?.length
+              ? {
+                  receiverId: {
+                    in: targetUserIds,
+                  },
+                }
+              : {}),
+          },
+          {
+            receiverId: myId,
+            ...(targetUserIds?.length
+              ? {
+                  senderId: {
+                    in: targetUserIds,
+                  },
+                }
+              : {}),
+          },
+        ],
+      },
+      select: {
+        senderId: true,
+        receiverId: true,
+      },
+    });
+
+    return friendships.map((friendship) =>
+      friendship.senderId === myId
+        ? friendship.receiverId
+        : friendship.senderId,
+    );
+  }
+
+  async findUsersByIds(userIds: string[]): Promise<InviteCandidateUser[]> {
+    return this.prismaService.user.findMany({
+      where: {
+        id: { in: userIds },
+      },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        username: true,
+      },
+    });
+  }
+
+  async createRoomParticipants(
+    roomId: string,
+    userIds: string[],
+  ): Promise<void> {
+    await this.prismaService.roomParticipant.createMany({
+      data: userIds.map((userId) => ({
+        roomId,
+        userId,
+      })),
+      skipDuplicates: true,
     });
   }
 
