@@ -15,6 +15,12 @@ When this skill is active:
 - Provide actionable recommendations with tradeoffs.
 - Prefer stable contracts and clear module ownership over convenience-driven imports.
 
+## Delegation Rule
+
+- Default behavior: delegate architecture review execution to the `architecture` agent role.
+- Use this skill to supply project-specific review lenses and output format, while the `architecture` agent performs the critique.
+- Only skip delegation when the user explicitly asks to avoid sub-agents.
+
 ---
 
 ## Review Lens (Always Apply)
