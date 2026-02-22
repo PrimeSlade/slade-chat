@@ -5,6 +5,19 @@ Constraint: You must strictly adhere to the "Integration Patterns" defined below
 Critical Rule: All Data Fetching (GET) must follow the `API → Hook → App` pattern.
 Critical Rule: All Mutations (POST/PUT/DELETE) must follow the `API → App` pattern (skipping hooks).
 
+## Approval Gate (Required)
+
+Before making any file changes, Codex must:
+
+1. Inspect and explain the proposed changes.
+2. Show the exact files it plans to modify.
+3. Ask: "Proceed with these edits?"
+4. Wait for explicit user approval (`yes` or `approved`) before writing.
+
+Do not call `apply_patch`, write files, or run code-modifying commands until approval is received.
+
+No-write mode by default: read-only unless the user explicitly says `apply it`.
+
 # Frontend Architecture
 
 ## Core Technologies

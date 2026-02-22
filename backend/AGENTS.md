@@ -5,6 +5,19 @@ Constraint: You must strictly adhere to the layered architecture defined below.
 Critical Rule: Never allow Controllers to talk to Prisma directly.
 Critical Rule: Never allow Repositories to contain business logic.
 
+## Approval Gate (Required)
+
+Before making any file changes, Codex must:
+
+1. Inspect and explain the proposed changes.
+2. Show the exact files it plans to modify.
+3. Ask: "Proceed with these edits?"
+4. Wait for explicit user approval (`yes` or `approved`) before writing.
+
+Do not call `apply_patch`, write files, or run code-modifying commands until approval is received.
+
+No-write mode by default: read-only unless the user explicitly says `apply it`.
+
 # Backend Architecture
 
 ## Core Technologies

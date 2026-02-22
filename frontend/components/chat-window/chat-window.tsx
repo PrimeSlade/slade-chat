@@ -141,13 +141,36 @@ export function ChatWindow({
       queryClient.setQueryData(["messages", roomId, 20], (oldData: any) => {
         if (!oldData) return oldData;
 
-        return updateMessageInPages(
+        const updated = updateMessageInPages(
           oldData,
           message.data.id,
           message.data.content,
           message.data.updatedAt!,
           message.data.deletedAt
         );
+
+        if (!message.data.deletedAt) return updated;
+
+        return {
+          ...updated,
+          pages: updated.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((msg: any) => {
+              if (msg.parentId === message.data.id && msg.parent) {
+                return {
+                  ...msg,
+                  parent: {
+                    ...msg.parent,
+                    content: null,
+                    deletedAt: message.data.deletedAt,
+                    updatedAt: message.data.updatedAt,
+                  },
+                };
+              }
+              return msg;
+            }),
+          })),
+        };
       });
     };
 
