@@ -15,9 +15,15 @@ import { CacheableMemory } from 'cacheable';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Cache } from 'cache-manager';
 
+// const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+// console.log(`Using env file: ${envFile}`);
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
+    }),
     AuthModule.forRoot({ auth }),
     EventEmitterModule.forRoot(),
     CacheModule.registerAsync({

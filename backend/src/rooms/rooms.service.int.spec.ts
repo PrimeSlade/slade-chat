@@ -106,7 +106,7 @@ describe('RoomsService integration (addMembersToRoom)', () => {
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
-          envFilePath: '.env',
+          envFilePath: '.env.test',
         }),
       ],
       providers: [

@@ -30,6 +30,8 @@ services:
     container_name: slade-backend-test
     env_file:
       - .env.test
+    environment:
+      DATABASE_URL: ${DATABASE_URL_TEST}
     depends_on:
       test-db:
         condition: service_healthy
@@ -37,7 +39,7 @@ services:
       - .:/app
       - /app/node_modules
     command: >
-      sh -c "export DATABASE_URL=$DATABASE_URL_TEST && pnpm prisma generate && pnpm prisma migrate deploy && pnpm test && pnpm test:integration"
+      sh -c "pnpm prisma generate && pnpm prisma migrate deploy && pnpm test && pnpm test:integration"
 
 volumes:
   test_postgres_data:
