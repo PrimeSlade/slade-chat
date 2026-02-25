@@ -1,7 +1,11 @@
 export const getInitials = (name: string) => {
   if (!name) return "";
-  return name
-    .split(" ")
+
+  const words = name.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length === 0) return "";
+
+  return words
     .map((word) => word[0])
     .slice(0, 2)
     .map((char, index) =>

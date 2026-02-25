@@ -33,6 +33,7 @@ export default function UserStatusProvider({
     };
 
     const handleRoomInvalidate = () => {
+      console.log("Called");
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
     };
 
