@@ -231,7 +231,7 @@ export class ChatGateway
   }
 
   @OnEvent('room_created')
-  handleDriectRoomCreatedEvent(userId: string) {
+  handleDriectRoomCreatedEvent(userId: string[]) {
     this.server.to(userId).emit('room_invalidate');
   }
 }

@@ -157,7 +157,11 @@ export class RoomsService {
   }
 
   async createGroupRoom(data: CreateGroupRoomDto, myId: string): Promise<Room> {
-    return this.roomsRepository.createGroupRoom(data, myId);
+    const createdRoom = await this.roomsRepository.createGroupRoom(data, myId);
+
+    this.eventEmitter.emit('room_created', data.friendIds);
+
+    return createdRoom;
   }
 
   async getInviteCandidates(
@@ -238,6 +242,8 @@ export class RoomsService {
         roomId,
         eligibleFriendIds,
       );
+
+      this.eventEmitter.emit('room_created', eligibleFriendIds);
     }
 
     return {
