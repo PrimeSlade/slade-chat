@@ -20,9 +20,11 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@backend/shared/*": ["../backend/src/shared/*"],
-      "@backend/shared": ["../backend/src/shared/index.ts"],
-      "generated/prisma/client": ["../backend/generated/prisma/client"]
+      "@backend/shared/*": ["../api/src/shared/*"],
+      "@backend/shared": ["../api/src/shared/index.ts"],
+      "@api/shared/*": ["../api/src/shared/*"],
+      "@api/shared": ["../api/src/shared/index.ts"],
+      "generated/prisma/client": ["../api/generated/prisma/client"]
     }
   },
   "include": [

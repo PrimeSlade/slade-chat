@@ -12,7 +12,7 @@
 [![pnpm](https://img.shields.io/badge/pnpm-10+-F69220?logo=pnpm)](https://pnpm.io/)
 [![Status](https://img.shields.io/badge/Status-Under%20Active%20Development-orange?style=flat-square)](#project-status--roadmap)
 
-A high-performance, real-time messaging and collaborative chat platform built with modern full-stack web technologies. Engineered as a **pnpm monorepo** uniting a **Next.js 16 (React 19)** frontend with a modular **NestJS 11** micro-architecture, powered by **Socket.IO WebSockets**, **Redis** presence caching, **Prisma ORM**, and **Better Auth** session security.
+A high-performance, real-time messaging and collaborative chat platform built with modern full-stack web technologies. Engineered as a **pnpm monorepo** uniting a **Next.js 16 (React 19)** web application with a modular **NestJS 11** API micro-architecture, powered by **Socket.IO WebSockets**, **Redis** presence caching, **Prisma ORM**, and **Better Auth** session security.
 
 ---
 
@@ -49,7 +49,7 @@ A high-performance, real-time messaging and collaborative chat platform built wi
 
 | Feature / Area | Status | Notes |
 | :--- | :---: | :--- |
-| **Monorepo Workspace Setup** | Completed | Root pnpm workspace with unified scripts and type sharing |
+| **Monorepo Workspace Setup** | Completed | Root pnpm workspace with `apps/api` and `apps/web` |
 | **Authentication & Sessions** | Completed | Better Auth, JWT/JWKS verification, secure cookie sessions, Google OAuth |
 | **Real-time Messaging** | Completed | Socket.IO bi-directional events, room joins/leaves, broadcasts |
 | **Direct & Group Chats** | Completed | 1-on-1 direct conversations and multi-member group chat rooms |
@@ -57,7 +57,7 @@ A high-performance, real-time messaging and collaborative chat platform built wi
 | **Read Receipts & Seen Tracking** | Completed | Per-message and per-room participant `lastReadAt` tracking |
 | **Online / Offline Presence** | Completed | Redis multi-connection counter & last seen timestamping |
 | **Nested Replies & Threading** | Completed | Parent-child message replies support in data model |
-| **Friendship Graph Optimizations** | In Progress | Narrow `FriendshipReadPort` & candidate lookup queries (`docs/scaling-todos.md`) |
+| **Friendship Graph Optimizations** | In Progress | Narrow `FriendshipReadPort` & candidate lookup queries (`apps/api/docs/scaling-todos.md`) |
 | **AI Assistant / Smart Chat** | In Progress | `@google/genai` Gemini SDK integration for smart chat assistance |
 | **Media & File Attachments** | Planned | Multipart uploads with S3/cloud storage integration |
 | **Push Notifications** | Planned | Web Push API & background notification dispatch |
@@ -99,7 +99,7 @@ A high-performance, real-time messaging and collaborative chat platform built wi
 | **[ESLint 9](https://eslint.org/) & [Prettier](https://prettier.io/)** | Code quality, linting, and formatting | Latest |
 | **[Docker & Compose](https://www.docker.com/)** | Containerized backend services & testing databases | Latest |
 
-### Frontend (`frontend`)
+### Frontend (`apps/web`)
 | Layer / Library | Technology |
 | :--- | :--- |
 | **Framework** | [Next.js 16](https://nextjs.org/) (App Router) + [React 19](https://react.dev/) |
@@ -111,7 +111,7 @@ A high-performance, real-time messaging and collaborative chat platform built wi
 | **Forms & Validation** | [React Hook Form](https://react-hook-form.com/) + [Zod v4](https://zod.dev/) |
 | **Icons & Notifications** | [Lucide React](https://lucide.dev/), [Sonner](https://sonner.emilkowal.ski/) |
 
-### Backend (`backend`)
+### Backend API (`apps/api`)
 | Layer / Library | Technology |
 | :--- | :--- |
 | **Framework** | [NestJS 11](https://nestjs.com/) (Modular architecture with Dependency Injection) |
@@ -130,14 +130,14 @@ A high-performance, real-time messaging and collaborative chat platform built wi
 
 ```mermaid
 graph TD
-    subgraph Client ["Frontend Client (Next.js 16 / React 19)"]
-        UI["UI Layer (App Router & shadcn/ui)"]
+    subgraph Client ["Frontend Client (apps/web)"]
+        UI["UI Layer (Next.js 16 + React 19 + shadcn/ui)"]
         Hooks["Hook Layer (useMessages, useRooms, useSocket)"]
         APILayer["API Layer (HTTP Axios & Socket.IO Client)"]
         AuthClient["Better Auth Client"]
     end
 
-    subgraph Backend ["Backend API & Gateway (NestJS 11)"]
+    subgraph Backend ["Backend API & Gateway (apps/api)"]
         MainGateway["Socket.IO ChatGateway (/chat namespace)"]
         Controllers["HTTP Controllers (/api/messages, /api/rooms, /api/users)"]
         Guards["Guards (HttpRoomGuard, WsRoomGuard, MessageSenderGuard)"]
@@ -176,70 +176,71 @@ graph TD
 
 ```
 slade-chat/
-├── backend/                           # NestJS Backend API & WebSocket Gateway
-│   ├── src/
-│   │   ├── chat/                      # Socket.IO WebSocket Gateway & Handlers
-│   │   │   ├── chat.gateway.ts        # Connection, typing, seen, room events
-│   │   │   └── chat.module.ts
-│   │   ├── common/                    # Cross-cutting guards, filters, interceptors, pipes
-│   │   │   ├── decorators/            # Custom Nest decorators (@Public)
-│   │   │   ├── filters/               # Global exception & Prisma error filters
-│   │   │   ├── guards/                # HTTP & WS room authorization guards
-│   │   │   ├── helpers/               # Friendship, hash, and soft delete helpers
-│   │   │   ├── interceptors/          # Standard response interceptor
-│   │   │   └── pipes/                 # Zod validation pipe
-│   │   ├── lib/
-│   │   │   └── auth.ts                # Better Auth configuration & adapter
-│   │   ├── messages/                  # Messages module (Controller, Service, Repository)
-│   │   ├── rooms/                     # Rooms module (Controller, Service, Repository)
-│   │   ├── users/                     # Users & Friends module
-│   │   ├── shared/                    # Shared DTOs, Zod schemas, & Prisma types
-│   │   ├── app.module.ts              # Root NestJS application module
-│   │   └── main.ts                    # Application bootstrap & middleware
-│   ├── prisma/
-│   │   ├── schema.prisma              # PostgreSQL database schema
-│   │   ├── migrations/                # Database migrations history
-│   │   └── seed.ts                    # Database seed script
-│   ├── test/                          # Unit, integration, and E2E test suites
-│   ├── Dockerfile                     # Development container definition
-│   ├── Dockerfile.test                # Test runner container
-│   ├── docker-compose.yml             # Local Docker Compose setup
-│   ├── docker-compose.test.yml        # Isolated test database compose setup
-│   ├── .env.example                   # Backend environment template
-│   └── package.json                   # (@chat/backend)
-│
-├── frontend/                          # Next.js 16 Frontend Web Application
-│   ├── app/                           # App Router routes & layouts
-│   │   ├── (auth)/login/              # Authentication & login pages
-│   │   ├── (protected)/               # Protected application routes
-│   │   │   ├── (people)/              # Friends & Strangers discovery views
-│   │   │   ├── chat/                  # Chat room & DM conversation views
-│   │   │   │   ├── [roomId]/          # Room conversation page
-│   │   │   │   └── dm/[userId]/       # Direct message initiator
-│   │   │   └── layout.tsx             # Main authenticated shell
-│   │   ├── providers/                 # TanStack Query, Theme, & Socket providers
-│   │   └── layout.tsx                 # Root HTML layout
-│   ├── components/                    # UI Components
-│   │   ├── chat-list/                 # Conversation list & active chat item
-│   │   ├── chat-window/               # Message viewport, header, & chat input
-│   │   ├── message/                   # Message bubble, action menu, seen avatars
-│   │   ├── navbar/                    # Navigation header & actions
-│   │   ├── people/                    # Friend cards & request actions
-│   │   ├── sidebar/                   # Main desktop sidebar navigation
-│   │   └── ui/                        # Reusable shadcn/ui primitives
-│   ├── hooks/                         # Custom data & mutation hooks (API → Hook → App)
-│   │   ├── use-messages.ts            # Message fetching, sending, & pagination
-│   │   ├── use-rooms.ts               # Room lists, creation, & updates
-│   │   ├── use-socket.ts              # Socket.IO connection & event subscription
-│   │   ├── use-friends.ts             # Friend requests & status mutations
-│   │   └── use-mark-as-seen.ts        # Intersection-based read receipt trigger
-│   ├── lib/                           # API clients, axios instance, socket helper
-│   ├── .env.example                   # Frontend environment template
-│   └── package.json                   # (@chat/frontend)
+├── apps/
+│   ├── api/                           # NestJS Backend API & WebSocket Gateway (@chat/api)
+│   │   ├── src/
+│   │   │   ├── chat/                  # Socket.IO WebSocket Gateway & Handlers
+│   │   │   │   ├── chat.gateway.ts    # Connection, typing, seen, room events
+│   │   │   │   └── chat.module.ts
+│   │   │   ├── common/                # Cross-cutting guards, filters, interceptors, pipes
+│   │   │   │   ├── decorators/        # Custom Nest decorators (@Public)
+│   │   │   │   ├── filters/           # Global exception & Prisma error filters
+│   │   │   │   ├── guards/            # HTTP & WS room authorization guards
+│   │   │   │   ├── helpers/           # Friendship, hash, and soft delete helpers
+│   │   │   │   ├── interceptors/      # Standard response interceptor
+│   │   │   │   └── pipes/             # Zod validation pipe
+│   │   │   ├── lib/
+│   │   │   │   └── auth.ts            # Better Auth configuration & adapter
+│   │   │   ├── messages/              # Messages module (Controller, Service, Repository)
+│   │   │   ├── rooms/                 # Rooms module (Controller, Service, Repository)
+│   │   │   ├── users/                 # Users & Friends module
+│   │   │   ├── shared/                # Shared DTOs, Zod schemas, & Prisma types
+│   │   │   ├── app.module.ts          # Root NestJS application module
+│   │   │   └── main.ts                # Application bootstrap & middleware
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma          # PostgreSQL database schema
+│   │   │   ├── migrations/            # Database migrations history
+│   │   │   └── seed.ts                # Database seed script
+│   │   ├── test/                      # Unit, integration, and E2E test suites
+│   │   ├── Dockerfile                 # Development container definition
+│   │   ├── Dockerfile.test            # Test runner container
+│   │   ├── docker-compose.yml         # Local Docker Compose setup
+│   │   ├── docker-compose.test.yml    # Isolated test database compose setup
+│   │   ├── .env.example               # Backend environment template
+│   │   └── package.json
+│   │
+│   └── web/                           # Next.js 16 Frontend Web Application (@chat/web)
+│       ├── app/                       # App Router routes & layouts
+│       │   ├── (auth)/login/          # Authentication & login pages
+│       │   ├── (protected)/           # Protected application routes
+│       │   │   ├── (people)/          # Friends & Strangers discovery views
+│       │   │   ├── chat/              # Chat room & DM conversation views
+│       │   │   │   ├── [roomId]/      # Room conversation page
+│       │   │   │   └── dm/[userId]/   # Direct message initiator
+│       │   │   └── layout.tsx         # Main authenticated shell
+│       │   ├── providers/             # TanStack Query, Theme, & Socket providers
+│       │   └── layout.tsx             # Root HTML layout
+│       ├── components/                # UI Components
+│       │   ├── chat-list/             # Conversation list & active chat item
+│       │   ├── chat-window/           # Message viewport, header, & chat input
+│       │   ├── message/               # Message bubble, action menu, seen avatars
+│       │   ├── navbar/                # Navigation header & actions
+│       │   ├── people/                # Friend cards & request actions
+│       │   ├── sidebar/               # Main desktop sidebar navigation
+│       │   └── ui/                    # Reusable shadcn/ui primitives
+│       ├── hooks/                     # Custom data & mutation hooks (API → Hook → App)
+│       │   ├── use-messages.ts        # Message fetching, sending, & pagination
+│       │   ├── use-rooms.ts           # Room lists, creation, & updates
+│       │   ├── use-socket.ts          # Socket.IO connection & event subscription
+│       │   ├── use-friends.ts         # Friend requests & status mutations
+│       │   └── use-mark-as-seen.ts    # Intersection-based read receipt trigger
+│       ├── lib/                       # API clients, axios instance, socket helper
+│       ├── .env.example               # Frontend environment template
+│       └── package.json
 │
 ├── .gitignore                         # Monorepo root ignore rules
 ├── package.json                       # Monorepo root configuration & scripts
-├── pnpm-workspace.yaml                # pnpm workspace definition
+├── pnpm-workspace.yaml                # pnpm workspace definition (apps/*)
 └── README.md                          # Comprehensive project documentation
 ```
 
@@ -274,9 +275,9 @@ Make sure the following dependencies are installed on your machine:
 
 ### Environment Variables
 
-Create `.env` files in both `backend` and `frontend`:
+Create `.env` files in both `apps/api` and `apps/web`:
 
-#### Backend (`backend/.env`):
+#### Backend API (`apps/api/.env`):
 ```env
 # Server
 PORT=3001
@@ -302,7 +303,7 @@ GOOGLE_CLIENT_SECRET="your-google-oauth-client-secret"
 GEMINI_API_KEY="your-gemini-api-key"
 ```
 
-#### Frontend (`frontend/.env.local`):
+#### Frontend (`apps/web/.env.local`):
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:3001"
 BETTER_AUTH_URL="http://localhost:3001"
@@ -332,7 +333,7 @@ pnpm seed
 Start both Frontend and Backend concurrently with one command:
 
 ```bash
-# Run both frontend and backend in parallel
+# Run both web and api in parallel
 pnpm dev
 ```
 
@@ -340,13 +341,13 @@ Or run each project individually:
 
 ```bash
 # Start frontend only (http://localhost:3000)
-pnpm dev:frontend
+pnpm dev:web
 
 # Start backend only (http://localhost:3001)
-pnpm dev:backend
+pnpm dev:api
 ```
 
-- **Frontend:** [http://localhost:3000](http://localhost:3000)
+- **Frontend Web:** [http://localhost:3000](http://localhost:3000)
 - **Backend API:** [http://localhost:3001/api](http://localhost:3001/api)
 - **WebSocket Gateway:** `ws://localhost:3001/chat`
 
@@ -366,7 +367,7 @@ pnpm docker:down
 
 For running isolated integration/e2e tests with test database:
 ```bash
-cd backend
+cd apps/api
 docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ```
 
@@ -379,23 +380,23 @@ Execute these scripts from the monorepo root:
 | Command | Target | Description |
 | :--- | :--- | :--- |
 | `pnpm dev` | Root | Starts Frontend and Backend simultaneously in watch mode |
-| `pnpm dev:frontend` | Frontend | Starts the Next.js dev server on port `3000` |
-| `pnpm dev:backend` | Backend | Starts the NestJS API dev server on port `3001` with auto-reload |
+| `pnpm dev:web` | `apps/web` | Starts the Next.js dev server on port `3000` |
+| `pnpm dev:api` | `apps/api` | Starts the NestJS API dev server on port `3001` with auto-reload |
 | `pnpm build` | All | Builds both frontend and backend for production |
-| `pnpm build:frontend` | Frontend | Builds the Next.js production bundle |
-| `pnpm build:backend` | Backend | Compiles the NestJS application into `dist/` |
+| `pnpm build:web` | `apps/web` | Builds the Next.js production bundle |
+| `pnpm build:api` | `apps/api` | Compiles the NestJS application into `dist/` |
 | `pnpm lint` | All | Runs ESLint checks across all packages |
-| `pnpm test` | Backend | Runs unit tests using Jest |
-| `pnpm test:watch` | Backend | Runs Jest in interactive watch mode |
-| `pnpm test:integration` | Backend | Executes integration tests against database |
-| `pnpm test:e2e` | Backend | Executes end-to-end API tests |
-| `pnpm db:generate` | Backend | Generates Prisma client types |
-| `pnpm db:migrate` | Backend | Runs Prisma schema migrations |
-| `pnpm db:push` | Backend | Pushes schema directly to database without creating a migration file |
-| `pnpm db:studio` | Backend | Opens Prisma Studio web data browser |
-| `pnpm seed` | Backend | Executes database seed script |
-| `pnpm docker:up` | Backend | Builds and launches backend Docker services |
-| `pnpm docker:down` | Backend | Stops backend Docker services |
+| `pnpm test` | `apps/api` | Runs unit tests using Jest |
+| `pnpm test:watch` | `apps/api` | Runs Jest in interactive watch mode |
+| `pnpm test:integration` | `apps/api` | Executes integration tests against database |
+| `pnpm test:e2e` | `apps/api` | Executes end-to-end API tests |
+| `pnpm db:generate` | `apps/api` | Generates Prisma client types |
+| `pnpm db:migrate` | `apps/api` | Runs Prisma schema migrations |
+| `pnpm db:push` | `apps/api` | Pushes schema directly to database without creating a migration file |
+| `pnpm db:studio` | `apps/api` | Opens Prisma Studio web data browser |
+| `pnpm seed` | `apps/api` | Executes database seed script |
+| `pnpm docker:up` | `apps/api` | Builds and launches backend Docker services |
+| `pnpm docker:down` | `apps/api` | Stops backend Docker services |
 
 ---
 
