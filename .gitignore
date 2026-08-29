@@ -1,7 +1,7 @@
 # Dependencies
 node_modules
 .pnp
-.pnp.js
+.pnp.*
 
 # Production / Build output
 dist
@@ -9,6 +9,8 @@ build
 .next
 out
 *.tsbuildinfo
+next-env.d.ts
+.vercel
 
 # OS & Temp
 .DS_Store
@@ -27,25 +29,39 @@ pnpm-debug.log*
 
 # Environment Variables
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 .env.test
+!.env.example
 
 # Testing & Coverage
 coverage
 .nyc_output
 
 # Prisma Generated
-backend/generated/prisma
+**/generated/prisma
+
+# Runtime & Process data
+pids
+*.pid
+*.seed
+*.pid.lock
 
 # Cache & Redis
 dump.rdb
 .turbo
 
-# IDE
+# IDEs & Editors
 .idea
+.project
+.classpath
+.c9
+*.launch
+.settings
+*.sublime-workspace
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
